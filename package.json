@@ -1,0 +1,25 @@
+{
+  "devDependencies": {
+    "@parcel/transformer-elm": "^2.8.2",
+    "elm": "^0.19.1-5",
+    "parcel": "^2.8.2"
+  },
+  "name": "rampart",
+  "description": "contemplating an hobby rewrite of the classic arcade game \"Rampart\"",
+  "version": "1.0.0",
+  "source": "./src/index.html",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/julianjelfs/rampart.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/julianjelfs/rampart/issues"
+  },
+  "homepage": "https://github.com/julianjelfs/rampart#readme"
+}
