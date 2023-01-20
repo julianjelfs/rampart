@@ -8,6 +8,7 @@ import Set exposing (Set)
 
 type alias Spec = 
     { castles: Set (Int, Int)
+    , dimensions: (Int, Int)
     , ships: Int 
     -- etc
     }
@@ -15,20 +16,19 @@ type alias Spec =
 roundOne : Spec 
 roundOne = 
     { castles = Set.fromList [(8, 30), (25, 2), (3, 8), (12, 12), (20, 20)]
+    , dimensions = (50, 35)
     , ships = 5
     }
 
 
 init : Model
 init =
-    { dimensions = ( 50, 35 ) 
-    , spec = roundOne
+    { spec = roundOne
     }
 
 
 type alias Model =
-    { dimensions : ( Int, Int ) 
-    , spec : Spec
+    {  spec : Spec
     }
 
 

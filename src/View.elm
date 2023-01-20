@@ -13,10 +13,10 @@ view model =
 
 
 grid : Model -> Html Msg
-grid model =
+grid { spec } =
     let
-        cols = List.range 0 (Tuple.first model.dimensions)
-        rows = List.range 0 (Tuple.second model.dimensions)
+        cols = List.range 0 (Tuple.first spec.dimensions)
+        rows = List.range 0 (Tuple.second spec.dimensions)
     in
     div [ class "grid" ]
         (List.map
@@ -25,7 +25,7 @@ grid model =
                     [ class "grid__row"
                     ] (List.map (\c -> 
                         let 
-                            castle = Set.member (c,r) model.spec.castles
+                            castle = Set.member (c,r) spec.castles
                         in
                         div 
                             [ class "grid__cell"
