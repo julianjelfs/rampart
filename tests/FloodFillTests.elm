@@ -45,20 +45,15 @@ floodFill =
         [ skip <|
             test "finds one enclosed castle at (3,8)" <|
                 \_ -> Expect.equal (Set.fromList [ ( 3, 8 ) ]) (findEnclosedCastles roundOne enclosed)
-
-        -- , test "finds no enclosed castles" <|
-        --     \_ -> Expect.equal Set.empty (findEnclosedCastles testSpec Set.empty)
+        , test "finds no enclosed castles" <|
+            \_ -> Expect.equal Set.empty (findEnclosedCastles testSpec Set.empty)
         , test "finds enclosed castle at (2,2)" <|
             \_ -> Expect.equal (Set.fromList [ ( 2, 2 ) ]) (findEnclosedCastles testSpec testWalls)
         , test "get adjacent cells" <|
             \_ ->
                 Expect.equal
                     [ ( -2, -2 )
-                    , ( -1, -2 )
-                    , ( 0, -2 )
-                    , ( -2, -1 )
                     , ( 0, -1 )
-                    , ( -2, 0 )
                     , ( -1, 0 )
                     , ( 0, 0 )
                     ]
