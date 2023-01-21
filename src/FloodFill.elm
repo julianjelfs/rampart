@@ -7,38 +7,26 @@ import Set exposing (Set)
 findEnclosedCastles : Spec -> Set ( Int, Int ) -> Set ( Int, Int )
 findEnclosedCastles spec walls =
     let
-        visited =
-            processCell spec Set.empty walls ( -1, -1 )
+        processCell ( x, y ) visited =
+            if cellIsValid spec visited walls ( x, y ) then
+                let
+                    visited_ =
+                        Set.insert ( x, y ) visited
+                in
+                processCell ( x - 1, y ) visited_
+                    |> processCell ( x + 1, y )
+                    |> processCell ( x, y - 1 )
+                    |> processCell ( x, y + 1 )
+
+            else
+                visited
     in
-    Debug.log "Result" <| Set.diff spec.castles visited
+    Debug.log "Result" <| Set.diff spec.castles (processCell ( -1, -1 ) Set.empty)
 
 
-processCell : Spec -> Set ( Int, Int ) -> Set ( Int, Int ) -> ( Int, Int ) -> Set ( Int, Int )
-processCell spec visited walls cell =
-    if Set.member cell visited then
-        visited
-
-    else
-        let
-            visited_ =
-                Set.insert cell visited
-        in
-        case getValidSiblings spec visited_ walls cell of
-            [] ->
-                visited_
-
-            xs ->
-                List.foldl
-                    (\c v ->
-                        Set.union v (processCell spec v walls c)
-                    )
-                    visited_
-                    xs
-
-
-getValidSiblings : Spec -> Set ( Int, Int ) -> Set ( Int, Int ) -> ( Int, Int ) -> List ( Int, Int )
-getValidSiblings spec visited walls cell =
-    getAdjacentCells cell |> List.filter (\c -> isInbounds spec.dimensions c && notVisited visited c && unoccupied walls c)
+cellIsValid : Spec -> Set ( Int, Int ) -> Set ( Int, Int ) -> ( Int, Int ) -> Bool
+cellIsValid spec visited walls cell =
+    isInbounds spec.dimensions cell && notVisited visited cell && unoccupied walls cell
 
 
 isInbounds : ( Int, Int ) -> ( Int, Int ) -> Bool
@@ -61,12 +49,3 @@ notVisited visited cell =
 unoccupied : Set ( Int, Int ) -> ( Int, Int ) -> Bool
 unoccupied walls cell =
     not (Set.member cell walls)
-
-
-getAdjacentCells : ( Int, Int ) -> List ( Int, Int )
-getAdjacentCells ( x, y ) =
-    [ ( x - 1, y - 1 )
-    , ( x + 1, y )
-    , ( x, y + 1 )
-    , ( x + 1, y + 1 )
-    ]
