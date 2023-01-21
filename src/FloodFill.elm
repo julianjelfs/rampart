@@ -10,7 +10,7 @@ findEnclosedCastles spec walls =
         visited =
             processCell spec Set.empty walls ( -1, -1 )
     in
-    Set.diff spec.castles visited
+    Debug.log "Result" <| Set.diff spec.castles visited
 
 
 processCell : Spec -> Set ( Int, Int ) -> Set ( Int, Int ) -> ( Int, Int ) -> Set ( Int, Int )
@@ -23,7 +23,7 @@ processCell spec visited walls cell =
             visited_ =
                 Set.insert cell visited
         in
-        case getValidSiblings spec visited walls cell of
+        case getValidSiblings spec visited_ walls cell of
             [] ->
                 visited_
 
