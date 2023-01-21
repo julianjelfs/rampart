@@ -1,6 +1,7 @@
 module Data exposing (..)
 
 import Set exposing (Set)
+import TestData exposing (enclosed)
 
 -- Can't yet think of an obvious way to tell if a castle is fully enclosed or not
 -- start brain dumping the sorts of things we will have
@@ -24,11 +25,13 @@ roundOne =
 init : Model
 init =
     { spec = roundOne
+    , walls = enclosed
     }
 
 
 type alias Model =
     {  spec : Spec
+    , walls : Set (Int, Int)
     }
 
 

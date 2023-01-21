@@ -4,6 +4,7 @@
     "@parcel/transformer-sass": "^2.8.2",
     "elm": "^0.19.1-5",
     "elm-format": "^0.8.5",
+    "elm-test": "^0.19.1-revision11",
     "parcel": "^2.8.2"
   },
   "name": "rampart",
@@ -12,7 +13,9 @@
   "source": "./src/index.html",
   "scripts": {
     "start": "parcel",
-    "build": "parcel build"
+    "build": "parcel build",
+    "test": "elm-test",
+    "test:watch": "elm-test --watch"
   },
   "repository": {
     "type": "git",

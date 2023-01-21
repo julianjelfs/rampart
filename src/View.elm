@@ -13,7 +13,7 @@ view model =
 
 
 grid : Model -> Html Msg
-grid { spec } =
+grid { spec, walls } =
     let
         cols = List.range 0 (Tuple.first spec.dimensions)
         rows = List.range 0 (Tuple.second spec.dimensions)
@@ -26,6 +26,7 @@ grid { spec } =
                     ] (List.map (\c -> 
                         let 
                             castle = Set.member (c,r) spec.castles
+                            wall = Set.member (c, r) walls
                         in
                         div 
                             [ class "grid__cell"
@@ -33,6 +34,7 @@ grid { spec } =
                                 [("grid__cell--land", c < 30)
                                 , ("grid__cell--sea", c >= 30)
                                 , ("grid__cell--castle", castle)
+                                , ("grid__cell--wall", wall)
                                 ]
                             ] [if castle then 
                                 Castle.castle
