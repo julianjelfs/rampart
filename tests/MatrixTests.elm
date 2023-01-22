@@ -9,8 +9,9 @@ import Test exposing (..)
 
 cornerShapeRotated =
     Matrix.fromLists
-        [ [ 1, 1 ]
-        , [ 0, 1 ]
+        [ [ 0, 0, 0 ]
+        , [ 1, 1, 0 ]
+        , [ 0, 1, 0 ]
         ]
 
 
@@ -98,38 +99,26 @@ pretty =
     Matrix.pretty String.fromInt
 
 
-flippedIdentity =
-    Matrix.identity >> Matrix.toLists >> List.map List.reverse >> Matrix.fromLists
-
-
-testRotation name dim before after =
+testRotation name before after =
     test (name ++ " rotate 90%") <|
         \_ ->
-            Maybe.map2 (\m i -> ( m, Matrix.transpose m, i )) before (flippedIdentity dim)
-                |> Maybe.andThen
-                    (\( m, t, i ) ->
-                        Matrix.dot t i
-                    )
-                |> Maybe.map2
-                    (\r res ->
-                        Expect.equal r res
-                    )
-                    after
+            Maybe.map rotate90 before
+                |> Maybe.map2 (\r res -> Expect.equal r res) after
                 |> Maybe.withDefault (Expect.fail ("didn't get the right rotation for " ++ name))
 
 
 matrixTests : Test
 matrixTests =
     describe "Playing with matrix rotations"
-        [ testRotation "lshape" 3 lshape lshapeRotated
-        , testRotation "lshapeFlipped" 3 lshapeFlipped lshapeFlippedRotated
-        , testRotation "sshape" 3 sshape sshapeRotated
-        , testRotation "sshapeFlipped" 3 sshapeFlipped sshapeFlippedRotated
-        , testRotation "cornerShape" 2 cornerShape cornerShapeRotated
-        , testRotation "cshape" 3 cshape cshapeRotated
-        , testRotation "crossshape" 3 crossshape crossshapeRotated
-        , testRotation "bar" 3 bar barRotated
-        , testRotation "tshape" 3 tshape tshapeRotated
-        , testRotation "zig" 3 zig zigRotated
-        , testRotation "zag" 3 zag zagRotated
+        [ testRotation "lshape" lshape lshapeRotated
+        , testRotation "lshapeFlipped" lshapeFlipped lshapeFlippedRotated
+        , testRotation "sshape" sshape sshapeRotated
+        , testRotation "sshapeFlipped" sshapeFlipped sshapeFlippedRotated
+        , testRotation "cornerShape" cornerShape cornerShapeRotated
+        , testRotation "cshape" cshape cshapeRotated
+        , testRotation "crossshape" crossshape crossshapeRotated
+        , testRotation "bar" bar barRotated
+        , testRotation "tshape" tshape tshapeRotated
+        , testRotation "zig" zig zigRotated
+        , testRotation "zag" zag zagRotated
         ]

@@ -3,11 +3,28 @@ module Shapes exposing (..)
 import Matrix exposing (Matrix)
 
 
+flippedIdentity : Maybe (Matrix Int)
+flippedIdentity =
+    Matrix.identity 3
+        |> Matrix.toLists
+        |> List.map List.reverse
+        |> Matrix.fromLists
+
+
+rotate90 : Matrix Int -> Matrix Int
+rotate90 matrix =
+    Maybe.andThen
+        (\id -> Matrix.dot (Matrix.transpose matrix) id)
+        flippedIdentity
+        |> Maybe.withDefault matrix
+
+
 cornerShape : Maybe (Matrix Int)
 cornerShape =
     Matrix.fromLists
-        [ [ 1, 1 ]
-        , [ 1, 0 ]
+        [ [ 0, 0, 0 ]
+        , [ 0, 1, 1 ]
+        , [ 0, 1, 0 ]
         ]
 
 
