@@ -3,35 +3,39 @@ module Data exposing (..)
 import Set exposing (Set)
 import TestData exposing (enclosed)
 
+
+
 -- Can't yet think of an obvious way to tell if a castle is fully enclosed or not
 -- start brain dumping the sorts of things we will have
 -- shapes are not quite the same as tetris - there are more of them
 
-type alias Spec = 
-    { castles: Set (Int, Int)
-    , dimensions: (Int, Int)
-    , ships: Int 
+
+type alias Spec =
+    { castles : Set Point
+    , dimensions : Point
+    , ships : Int
+
     -- etc
     }
 
-roundOne : Spec 
-roundOne = 
-    { castles = Set.fromList [(8, 30), (25, 2), (3, 8), (12, 12), (20, 20)]
-    , dimensions = (50, 35)
+
+roundOne : Spec
+roundOne =
+    { castles = Set.fromList [ ( 8, 30 ), ( 25, 2 ), ( 3, 8 ), ( 12, 12 ), ( 20, 20 ) ]
+    , dimensions = ( 50, 35 )
     , ships = 5
     }
 
 
-init : Model
-init =
-    { spec = roundOne
-    , walls = enclosed
-    }
+type alias Point =
+    ( Int, Int )
 
 
 type alias Model =
-    {  spec : Spec
-    , walls : Set (Int, Int)
+    { spec : Spec
+    , walls : Set Point
+    , cannon : Set Point
+    , buildable : Set Point
     }
 
 
@@ -47,12 +51,8 @@ type BuildingBlock
     | Etc
 
 
-type alias Position =
-    ( Int, Int )
-
-
 type alias Ship =
-    { pos : Position
+    { pos : Point
     , velocity : Float
     , direction : Direction
     }
@@ -63,15 +63,15 @@ type alias Direction =
 
 
 type alias Cannonball =
-    { pos : Position
+    { pos : Point
     , velocity : Float
     , direction : Direction
-    , target : Position
+    , target : Point
     }
 
 
 type alias Castle =
-    { pos : Position
+    { pos : Point
     , enclosed : Bool
     , canon : List Cannon
     }
@@ -83,7 +83,7 @@ type alias Player =
 
 
 type alias Cannon =
-    { pos : Position }
+    { pos : Point }
 
 
 type Game

@@ -1,8 +1,8 @@
 module FloodFillTests exposing (..)
 
-import Data exposing (Spec, roundOne)
+import Data exposing (Point, Spec, roundOne)
 import Expect exposing (Expectation)
-import FloodFill exposing (findEnclosedCastles, isInbounds, notVisited)
+import FloodFill exposing (findBuildableCells, findEnclosedCastles, isInbounds, notVisited)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Set exposing (Set)
 import Test exposing (..)
@@ -17,7 +17,13 @@ testSpec =
     }
 
 
-testWalls : Set ( Int, Int )
+testCannon : Set Point
+testCannon =
+    Set.fromList
+        [ ( 1, 1 ), ( 1, 2 ) ]
+
+
+testWalls : Set Point
 testWalls =
     Set.fromList
         [ ( 0, 0 )
@@ -39,15 +45,27 @@ testWalls =
         ]
 
 
+buildable : Test
+buildable =
+    describe "Finding buildable cells i.e. empty cells inside enclosed walls"
+        [ test "with no enclosed castles" <|
+            \_ -> Expect.equal Set.empty (findBuildableCells testSpec Set.empty Set.empty)
+        , test "with enclosed castle and no cannon" <|
+            \_ -> Expect.equal (Set.fromList [ ( 1, 1 ), ( 1, 2 ), ( 1, 3 ), ( 2, 1 ), ( 2, 2 ), ( 2, 3 ), ( 3, 1 ), ( 3, 2 ), ( 3, 3 ) ]) (findBuildableCells testSpec testWalls Set.empty)
+        , test "with enclosed castle and some cannon" <|
+            \_ -> Expect.equal (Set.fromList [ ( 1, 3 ), ( 2, 1 ), ( 2, 2 ), ( 2, 3 ), ( 3, 1 ), ( 3, 2 ), ( 3, 3 ) ]) (findBuildableCells testSpec testWalls testCannon)
+        ]
+
+
 floodFill : Test
 floodFill =
     describe "The floodfill algorithm"
         [ test "finds one enclosed castle at (3,8)" <|
-            \_ -> Expect.equal (Set.fromList [ ( 3, 8 ) ]) (findEnclosedCastles roundOne enclosed)
+            \_ -> Expect.equal (Set.fromList [ ( 3, 8 ) ]) (findEnclosedCastles roundOne enclosed Set.empty)
         , test "finds no enclosed castles" <|
-            \_ -> Expect.equal Set.empty (findEnclosedCastles testSpec Set.empty)
+            \_ -> Expect.equal Set.empty (findEnclosedCastles testSpec Set.empty Set.empty)
         , test "finds enclosed castle at (2,2)" <|
-            \_ -> Expect.equal (Set.fromList [ ( 2, 2 ) ]) (findEnclosedCastles testSpec testWalls)
+            \_ -> Expect.equal (Set.fromList [ ( 2, 2 ) ]) (findEnclosedCastles testSpec testWalls Set.empty)
         , test "is inbounds one" <|
             \_ ->
                 Expect.equal

@@ -1,35 +1,55 @@
 module FloodFill exposing (..)
 
-import Data exposing (Spec)
+import Data exposing (Point, Spec)
 import Set exposing (Set)
 
 
-findEnclosedCastles : Spec -> Set ( Int, Int ) -> Set ( Int, Int )
-findEnclosedCastles spec walls =
+findBuildableCells : Spec -> Set Point -> Set Point -> Set Point
+findBuildableCells spec walls cannon =
     let
-        processCell ( x, y ) visited =
-            if cellIsValid spec visited walls ( x, y ) then
-                let
-                    visited_ =
-                        Set.insert ( x, y ) visited
-                in
-                processCell ( x - 1, y ) visited_
-                    |> processCell ( x + 1, y )
-                    |> processCell ( x, y - 1 )
-                    |> processCell ( x, y + 1 )
-
-            else
-                visited
+        enclosed =
+            findEnclosedCastles spec walls cannon
     in
-    Debug.log "Result" <| Set.diff spec.castles (processCell ( -1, -1 ) Set.empty)
+    Set.foldl
+        (\c buildable ->
+            Set.union buildable (findBuildableCellsWithinCastleWalls spec walls cannon c)
+        )
+        Set.empty
+        enclosed
 
 
-cellIsValid : Spec -> Set ( Int, Int ) -> Set ( Int, Int ) -> ( Int, Int ) -> Bool
-cellIsValid spec visited walls cell =
-    isInbounds spec.dimensions cell && notVisited visited cell && unoccupied walls cell
+findBuildableCellsWithinCastleWalls : Spec -> Set Point -> Set Point -> Point -> Set Point
+findBuildableCellsWithinCastleWalls spec walls cannon castle =
+    processCell spec walls cannon castle Set.empty
 
 
-isInbounds : ( Int, Int ) -> ( Int, Int ) -> Bool
+findEnclosedCastles : Spec -> Set Point -> Set Point -> Set Point
+findEnclosedCastles spec walls cannon =
+    Set.diff spec.castles (processCell spec walls cannon ( -1, -1 ) Set.empty)
+
+
+processCell : Spec -> Set Point -> Set Point -> Point -> Set Point -> Set Point
+processCell spec walls cannon ( x, y ) visited =
+    if cellIsValid spec visited walls cannon ( x, y ) then
+        let
+            visited_ =
+                Set.insert ( x, y ) visited
+        in
+        processCell spec walls cannon ( x - 1, y ) visited_
+            |> processCell spec walls cannon ( x + 1, y )
+            |> processCell spec walls cannon ( x, y - 1 )
+            |> processCell spec walls cannon ( x, y + 1 )
+
+    else
+        visited
+
+
+cellIsValid : Spec -> Set Point -> Set Point -> Set Point -> Point -> Bool
+cellIsValid spec visited walls cannon cell =
+    isInbounds spec.dimensions cell && notVisited visited cell && unoccupied walls cannon cell
+
+
+isInbounds : Point -> Point -> Bool
 isInbounds ( cols, rows ) ( x, y ) =
     x
         >= -1
@@ -41,11 +61,12 @@ isInbounds ( cols, rows ) ( x, y ) =
         <= rows
 
 
-notVisited : Set ( Int, Int ) -> ( Int, Int ) -> Bool
+notVisited : Set Point -> Point -> Bool
 notVisited visited cell =
     not (Set.member cell visited)
 
 
-unoccupied : Set ( Int, Int ) -> ( Int, Int ) -> Bool
-unoccupied walls cell =
+unoccupied : Set Point -> Set Point -> Point -> Bool
+unoccupied walls cannon cell =
     not (Set.member cell walls)
+        && not (Set.member cell cannon)

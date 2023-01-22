@@ -1,5 +1,5 @@
 :root {
-  --bd: rgba(0,0,0,0.05);
+  --bd: rgba(0, 0, 0, 0.05);
   --cell-size: 30px;
 }
 
@@ -34,13 +34,16 @@ body {
       background-color: slateblue;
     }
 
+    &--buildable {
+      background-color: blue;
+    }
+
     &--castle {
       // background-color: red;
     }
 
     &--wall {
-      background-color: #555555;
+      background-color: brown;
     }
   }
 }
-
