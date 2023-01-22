@@ -6,6 +6,20 @@ import Matrix exposing (Matrix)
 import Test exposing (..)
 
 
+cornerShape =
+    Matrix.fromLists
+        [ [ 1, 1 ]
+        , [ 1, 0 ]
+        ]
+
+
+cornerShapeRotated =
+    Matrix.fromLists
+        [ [ 1, 1 ]
+        , [ 0, 1 ]
+        ]
+
+
 sshape =
     Matrix.fromLists
         [ [ 0, 0, 1, 1, 0 ]
@@ -71,4 +85,5 @@ matrixTests =
     describe "Playing with matrix rotations"
         [ testRotation "lshape" 3 lshape lshapeRotated
         , testRotation "sshape" 5 sshape sshapeRotated
+        , testRotation "cornerShape" 2 cornerShape cornerShapeRotated
         ]
