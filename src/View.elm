@@ -5,6 +5,7 @@ import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, classList)
+import Html.Events exposing (onClick)
 import Set
 
 
@@ -45,6 +46,7 @@ grid { spec, walls, cannon, buildable } =
                             in
                             div
                                 [ class "grid__cell"
+                                , onClick (CellClicked ( c, r ))
                                 , classList
                                     [ ( "grid__cell--land", c < 30 )
                                     , ( "grid__cell--sea", c >= 30 )

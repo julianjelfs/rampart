@@ -24,18 +24,27 @@ body {
   &__cell {
     flex: 1;
     border: 1px solid var(--bd);
-    // height: var(--cell-size);
+    cursor: pointer;
 
     &--land {
       background-color: greenyellow;
+      &:hover {
+        background-color: darken(greenyellow, 15%);
+      }
     }
 
     &--sea {
       background-color: slateblue;
+      &:hover {
+        background-color: darken(slateblue, 15%);
+      }
     }
 
     &--buildable {
       background-color: blue;
+      &:hover {
+        background-color: darken(blue, 15%);
+      }
     }
 
     &--castle {
@@ -44,6 +53,9 @@ body {
 
     &--wall {
       background-color: brown;
+      &:hover {
+        background-color: darken(brown, 15%);
+      }
     }
   }
 }

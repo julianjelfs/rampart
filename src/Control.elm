@@ -22,8 +22,16 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Increment ->
-            model
+        CellClicked cell ->
+            let
+                walls =
+                    if Set.member cell model.walls then
+                        Set.remove cell model.walls
 
-        Decrement ->
-            model
+                    else
+                        Set.insert cell model.walls
+            in
+            { model
+                | walls = walls
+                , buildable = findBuildableCells model.spec walls model.cannon
+            }

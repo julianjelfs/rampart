@@ -40,8 +40,7 @@ type alias Model =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = CellClicked Point
 
 
 type BuildingBlock
