@@ -3,14 +3,8 @@ module MatrixTests exposing (..)
 import Data exposing (Point, Spec, roundOne)
 import Expect exposing (Expectation)
 import Matrix exposing (Matrix)
+import Shapes exposing (..)
 import Test exposing (..)
-
-
-cornerShape =
-    Matrix.fromLists
-        [ [ 1, 1 ]
-        , [ 1, 0 ]
-        ]
 
 
 cornerShapeRotated =
@@ -20,13 +14,11 @@ cornerShapeRotated =
         ]
 
 
-sshape =
+cshapeRotated =
     Matrix.fromLists
-        [ [ 0, 0, 1, 1, 0 ]
-        , [ 0, 0, 1, 0, 0 ]
-        , [ 0, 0, 1, 0, 0 ]
-        , [ 0, 0, 1, 0, 0 ]
-        , [ 0, 1, 1, 0, 0 ]
+        [ [ 0, 0, 0 ]
+        , [ 1, 1, 1 ]
+        , [ 1, 0, 1 ]
         ]
 
 
@@ -40,19 +32,19 @@ sshapeRotated =
         ]
 
 
-lshape =
-    Matrix.fromLists
-        [ [ 0, 1, 1 ]
-        , [ 0, 1, 0 ]
-        , [ 0, 1, 0 ]
-        ]
-
-
 lshapeRotated =
     Matrix.fromLists
         [ [ 0, 0, 0 ]
         , [ 1, 1, 1 ]
         , [ 0, 0, 1 ]
+        ]
+
+
+crossshapeRotated =
+    Matrix.fromLists
+        [ [ 0, 1, 0 ]
+        , [ 1, 1, 1 ]
+        , [ 0, 1, 0 ]
         ]
 
 
@@ -86,4 +78,6 @@ matrixTests =
         [ testRotation "lshape" 3 lshape lshapeRotated
         , testRotation "sshape" 5 sshape sshapeRotated
         , testRotation "cornerShape" 2 cornerShape cornerShapeRotated
+        , testRotation "cshape" 3 cshape cshapeRotated
+        , testRotation "crossshape" 3 crossshape crossshapeRotated
         ]
