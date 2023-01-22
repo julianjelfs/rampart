@@ -24,11 +24,17 @@ cshapeRotated =
 
 sshapeRotated =
     Matrix.fromLists
-        [ [ 0, 0, 0, 0, 0 ]
-        , [ 1, 0, 0, 0, 0 ]
-        , [ 1, 1, 1, 1, 1 ]
-        , [ 0, 0, 0, 0, 1 ]
-        , [ 0, 0, 0, 0, 0 ]
+        [ [ 1, 0, 0 ]
+        , [ 1, 1, 1 ]
+        , [ 0, 0, 1 ]
+        ]
+
+
+sshapeFlippedRotated =
+    Matrix.fromLists
+        [ [ 0, 0, 1 ]
+        , [ 1, 1, 1 ]
+        , [ 1, 0, 0 ]
         ]
 
 
@@ -40,10 +46,50 @@ lshapeRotated =
         ]
 
 
+lshapeFlippedRotated =
+    Matrix.fromLists
+        [ [ 0, 0, 1 ]
+        , [ 1, 1, 1 ]
+        , [ 0, 0, 0 ]
+        ]
+
+
 crossshapeRotated =
     Matrix.fromLists
         [ [ 0, 1, 0 ]
         , [ 1, 1, 1 ]
+        , [ 0, 1, 0 ]
+        ]
+
+
+barRotated =
+    Matrix.fromLists
+        [ [ 0, 1, 0 ]
+        , [ 0, 1, 0 ]
+        , [ 0, 1, 0 ]
+        ]
+
+
+tshapeRotated =
+    Matrix.fromLists
+        [ [ 0, 1, 0 ]
+        , [ 1, 1, 0 ]
+        , [ 0, 1, 0 ]
+        ]
+
+
+zigRotated =
+    Matrix.fromLists
+        [ [ 0, 1, 0 ]
+        , [ 0, 1, 1 ]
+        , [ 0, 0, 1 ]
+        ]
+
+
+zagRotated =
+    Matrix.fromLists
+        [ [ 0, 0, 1 ]
+        , [ 0, 1, 1 ]
         , [ 0, 1, 0 ]
         ]
 
@@ -76,8 +122,14 @@ matrixTests : Test
 matrixTests =
     describe "Playing with matrix rotations"
         [ testRotation "lshape" 3 lshape lshapeRotated
-        , testRotation "sshape" 5 sshape sshapeRotated
+        , testRotation "lshapeFlipped" 3 lshapeFlipped lshapeFlippedRotated
+        , testRotation "sshape" 3 sshape sshapeRotated
+        , testRotation "sshapeFlipped" 3 sshapeFlipped sshapeFlippedRotated
         , testRotation "cornerShape" 2 cornerShape cornerShapeRotated
         , testRotation "cshape" 3 cshape cshapeRotated
         , testRotation "crossshape" 3 crossshape crossshapeRotated
+        , testRotation "bar" 3 bar barRotated
+        , testRotation "tshape" 3 tshape tshapeRotated
+        , testRotation "zig" 3 zig zigRotated
+        , testRotation "zag" 3 zag zagRotated
         ]
