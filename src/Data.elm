@@ -1,5 +1,6 @@
 module Data exposing (..)
 
+import Matrix exposing (Matrix)
 import Set exposing (Set)
 import TestData exposing (enclosed)
 
@@ -36,11 +37,15 @@ type alias Model =
     , walls : Set Point
     , cannon : Set Point
     , buildable : Set Point
+    , currentShape : Maybe (Matrix Int)
+    , mousePos : ( Float, Float )
     }
 
 
 type Msg
     = CellClicked Point
+    | NextShape (Matrix Int)
+    | MouseMove ( Float, Float )
 
 
 type BuildingBlock

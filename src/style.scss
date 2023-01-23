@@ -9,6 +9,17 @@ body {
   height: 100vh;
 }
 
+.wrapper {
+  height: 100vh;
+}
+
+.ghostshape {
+  position: absolute;
+  z-index: 1;
+  top: 100px;
+  left: 100px;
+}
+
 .grid {
   display: flex;
   flex-direction: column;

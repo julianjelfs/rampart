@@ -1,6 +1,42 @@
 module Shapes exposing (..)
 
+import Data exposing (Msg(..))
+import List.Extra exposing (getAt)
 import Matrix exposing (Matrix)
+import Random exposing (Generator)
+
+
+getRandomShape : Cmd Msg
+getRandomShape =
+    Random.generate NextShape randomShapeGenerator
+
+
+randomShapeGenerator : Generator (Matrix Int)
+randomShapeGenerator =
+    Random.int 0 10 |> Random.map getShape
+
+
+getShape : Int -> Matrix Int
+getShape i =
+    getAt i allShapes
+        |> Maybe.withDefault (Matrix.identity 3)
+
+
+allShapes : List (Matrix Int)
+allShapes =
+    [ cornerShape
+    , zig
+    , zag
+    , bar
+    , tshape
+    , cshape
+    , sshape
+    , sshapeFlipped
+    , lshape
+    , lshapeFlipped
+    , crossshape
+    ]
+        |> List.filterMap identity
 
 
 flippedIdentity : Maybe (Matrix Int)
