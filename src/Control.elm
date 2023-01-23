@@ -42,7 +42,7 @@ update msg model =
                 | walls = walls
                 , buildable = findBuildableCells model.spec walls model.cannon
               }
-            , Cmd.none
+            , getRandomShape
             )
 
         MouseMove pos ->
