@@ -40,21 +40,21 @@ body {
 
     &--land {
       background-color: greenyellow;
-      &:hover {
+      &.grid__cell--hover {
         background-color: darken(greenyellow, 15%);
       }
     }
 
     &--sea {
       background-color: slateblue;
-      &:hover {
+      &.grid__cell--hover {
         background-color: darken(slateblue, 15%);
       }
     }
 
     &--buildable {
       background-color: blue;
-      &:hover {
+      &.grid__cell--hover {
         background-color: darken(blue, 15%);
       }
     }
@@ -65,7 +65,7 @@ body {
 
     &--wall {
       background-color: brown;
-      &:hover {
+      &.grid__cell--hover {
         background-color: darken(brown, 15%);
       }
     }

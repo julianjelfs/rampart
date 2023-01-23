@@ -21,6 +21,7 @@ init =
       , buildable = findBuildableCells roundOne enclosed cannon
       , currentShape = Nothing
       , mousePos = ( 0, 0 )
+      , overCell = Nothing
       }
     , getRandomShape
     )
@@ -44,6 +45,12 @@ update msg model =
               }
             , getRandomShape
             )
+
+        MouseOver p ->
+            ( { model | overCell = Just p }, Cmd.none )
+
+        MouseOut ->
+            ( { model | overCell = Nothing }, Cmd.none )
 
         MouseMove pos ->
             ( { model | mousePos = pos }, Cmd.none )

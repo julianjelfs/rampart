@@ -39,6 +39,7 @@ type alias Model =
     , buildable : Set Point
     , currentShape : Maybe (Matrix Int)
     , mousePos : ( Float, Float )
+    , overCell : Maybe Point
     }
 
 
@@ -46,6 +47,8 @@ type Msg
     = CellClicked Point
     | NextShape (Matrix Int)
     | MouseMove ( Float, Float )
+    | MouseOver Point
+    | MouseOut
 
 
 type BuildingBlock

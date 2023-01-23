@@ -5,7 +5,7 @@ import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, classList, style)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onMouseOut, onMouseOver)
 import Matrix exposing (Matrix)
 import Set
 
@@ -27,7 +27,7 @@ drawCurrentShape ( x, y ) shape =
 
 
 grid : Model -> Html Msg
-grid { spec, walls, cannon, buildable, currentShape, mousePos } =
+grid { spec, walls, cannon, buildable, currentShape, mousePos, overCell } =
     let
         cols =
             List.range 0 (Tuple.first spec.dimensions)
@@ -66,12 +66,15 @@ grid { spec, walls, cannon, buildable, currentShape, mousePos } =
                                 div
                                     [ class "grid__cell"
                                     , onClick (CellClicked ( c, r ))
+                                    , onMouseOver (MouseOver ( c, r ))
+                                    , onMouseOut MouseOut
                                     , classList
                                         [ ( "grid__cell--land", c < 30 )
                                         , ( "grid__cell--sea", c >= 30 )
                                         , ( "grid__cell--castle", castle )
                                         , ( "grid__cell--buildable", buildable_ )
                                         , ( "grid__cell--wall", wall )
+                                        , ( "grid__cell--hover", Just ( c, r ) == overCell )
                                         ]
                                     ]
                                     [ if castle then
