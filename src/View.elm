@@ -1,13 +1,14 @@
 module View exposing (..)
 
-import Data exposing (Model, Msg(..))
+import Data exposing (Model, Msg(..), Point)
 import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class, classList, style)
 import Html.Events exposing (onClick, onMouseOut, onMouseOver)
 import Matrix exposing (Matrix)
-import Set
+import Set exposing (Set)
+import Shapes exposing (Shape, overlapsShape)
 
 
 view : Model -> Html Msg
@@ -20,10 +21,26 @@ floatToPixelString f =
     String.fromFloat f ++ "px"
 
 
-drawCurrentShape : ( Float, Float ) -> Matrix Int -> Html Msg
-drawCurrentShape ( x, y ) shape =
-    div [ class "ghostshape", style "left" (floatToPixelString x), style "top" (floatToPixelString y) ]
-        [ text (Matrix.pretty String.fromInt shape) ]
+subtractPoint : Point -> Point -> Point
+subtractPoint ( x1, y1 ) ( x2, y2 ) =
+    ( (x1 - x2) + 2, (y1 - y2) + 2 )
+
+
+adjacent : Point -> Point -> Bool
+adjacent ( x1, y1 ) ( x2, y2 ) =
+    abs (x1 - x2)
+        <= 1
+        && abs (y1 - y2)
+        <= 1
+
+
+isCellShadowed : Set Point -> Set Point -> Set Point -> Point -> Point -> Shape -> Bool
+isCellShadowed walls cannon castles cell overCell currentShape =
+    not (Set.member cell castles)
+        && not (Set.member cell cannon)
+        && not (Set.member cell walls)
+        && adjacent cell overCell
+        && overlapsShape (subtractPoint cell overCell) currentShape
 
 
 grid : Model -> Html Msg
@@ -36,13 +53,7 @@ grid { spec, walls, cannon, buildable, currentShape, mousePos, overCell } =
             List.range 0 (Tuple.second spec.dimensions)
     in
     div [ class "wrapper" ]
-        [ case currentShape of
-            Nothing ->
-                text ""
-
-            Just shape ->
-                drawCurrentShape mousePos shape
-        , div [ class "grid" ]
+        [ div [ class "grid" ]
             (List.map
                 (\r ->
                     div
@@ -74,7 +85,15 @@ grid { spec, walls, cannon, buildable, currentShape, mousePos, overCell } =
                                         , ( "grid__cell--castle", castle )
                                         , ( "grid__cell--buildable", buildable_ )
                                         , ( "grid__cell--wall", wall )
-                                        , ( "grid__cell--hover", Just ( c, r ) == overCell )
+                                        , ( "grid__cell--shadow"
+                                          , Maybe.map2
+                                                (\shape over ->
+                                                    isCellShadowed walls cannon spec.castles ( c, r ) over shape
+                                                )
+                                                currentShape
+                                                overCell
+                                                |> Maybe.withDefault False
+                                          )
                                         ]
                                     ]
                                     [ if castle then

@@ -107,6 +107,19 @@ testRotation name before after =
                 |> Maybe.withDefault (Expect.fail ("didn't get the right rotation for " ++ name))
 
 
+overlapTests : Test
+overlapTests =
+    describe "overlaps logic"
+        [ test "get does what I think it does" <|
+            \_ ->
+                let
+                    m =
+                        Matrix.repeat 3 3 5
+                in
+                Expect.equal (Just 5) (Matrix.get 1 1 m)
+        ]
+
+
 matrixTests : Test
 matrixTests =
     describe "Playing with matrix rotations"
