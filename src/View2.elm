@@ -25,10 +25,7 @@ floatToPixelString f =
 
 isCellShadowed : Set Point -> Set Point -> Set Point -> Point -> Point -> Shape -> Bool
 isCellShadowed walls cannon castles cell overCell currentShape =
-    not (Set.member cell castles)
-        && not (Set.member cell cannon)
-        && not (Set.member cell walls)
-        && isAdjacent cell overCell
+    isAdjacent cell overCell
         && overlapsShape (subtractPoint cell overCell) currentShape
 
 

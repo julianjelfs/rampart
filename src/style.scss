@@ -59,9 +59,9 @@ body {
     }
 
     &--castle {
-      fill: peach;
+      fill: orange;
       &.grid__cell--shadow {
-        fill: darken(hotpink, 15%);
+        fill: darken(orange, 15%);
       }
     }
 
