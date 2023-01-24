@@ -1,11 +1,11 @@
 module Control exposing (..)
 
-import Browser.Events exposing (onMouseMove)
+import Browser.Events exposing (onKeyDown, onMouseMove)
 import Data exposing (Model, Msg(..), roundOne)
 import FloodFill exposing (findBuildableCells)
 import Json.Decode as D
 import Set exposing (Set)
-import Shapes exposing (getRandomShape)
+import Shapes exposing (getRandomShape, rotate90)
 import TestData exposing (enclosed)
 
 
@@ -20,7 +20,6 @@ init =
       , cannon = cannon
       , buildable = findBuildableCells roundOne enclosed cannon
       , currentShape = Nothing
-      , mousePos = ( 0, 0 )
       , overCell = Nothing
       }
     , getRandomShape
@@ -52,8 +51,13 @@ update msg model =
         MouseOut ->
             ( { model | overCell = Nothing }, Cmd.none )
 
-        MouseMove pos ->
-            ( { model | mousePos = pos }, Cmd.none )
+        KeyDown code ->
+            case code of
+                32 ->
+                    ( { model | currentShape = Maybe.map rotate90 model.currentShape }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         NextShape shape ->
             ( { model | currentShape = Just shape }, Cmd.none )
@@ -66,11 +70,9 @@ subscriptions model =
             Sub.none
 
         Just shape ->
-            onMouseMove (D.map MouseMove positionDecoder)
+            onKeyDown (D.map KeyDown keyDecoder)
 
 
-positionDecoder : D.Decoder ( Float, Float )
-positionDecoder =
-    D.map2 (\x y -> ( x, y ))
-        (D.field "clientX" D.float)
-        (D.field "clientY" D.float)
+keyDecoder : D.Decoder Int
+keyDecoder =
+    D.field "keyCode" D.int

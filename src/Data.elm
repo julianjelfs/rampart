@@ -38,7 +38,6 @@ type alias Model =
     , cannon : Set Point
     , buildable : Set Point
     , currentShape : Maybe (Matrix Int)
-    , mousePos : ( Float, Float )
     , overCell : Maybe Point
     }
 
@@ -46,7 +45,7 @@ type alias Model =
 type Msg
     = CellClicked Point
     | NextShape (Matrix Int)
-    | MouseMove ( Float, Float )
+    | KeyDown Int
     | MouseOver Point
     | MouseOut
 

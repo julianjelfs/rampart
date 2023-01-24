@@ -44,7 +44,7 @@ isCellShadowed walls cannon castles cell overCell currentShape =
 
 
 grid : Model -> Html Msg
-grid { spec, walls, cannon, buildable, currentShape, mousePos, overCell } =
+grid { spec, walls, cannon, buildable, currentShape, overCell } =
     let
         cols =
             List.range 0 (Tuple.first spec.dimensions)
