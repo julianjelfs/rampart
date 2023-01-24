@@ -3,6 +3,7 @@ module MatrixTests exposing (..)
 import Data exposing (Point, Spec, roundOne)
 import Expect exposing (Expectation)
 import Matrix exposing (Matrix)
+import Set exposing (Set)
 import Shapes exposing (..)
 import Test exposing (..)
 
@@ -105,6 +106,23 @@ testRotation name before after =
             Maybe.map rotate90 before
                 |> Maybe.map2 (\r res -> Expect.equal r res) after
                 |> Maybe.withDefault (Expect.fail ("didn't get the right rotation for " ++ name))
+
+
+footprintTests : Test
+footprintTests =
+    describe "translate a shape and a center point into a set of points"
+        [ test "zag rotated" <|
+            \_ ->
+                Maybe.map
+                    (\m ->
+                        Expect.equal (Set.fromList [ ( 4, 6 ), ( 5, 5 ), ( 6, 5 ), ( 5, 6 ) ]) (cellsOccupiedByShape ( 5, 5 ) m)
+                    )
+                    zagRotated
+                    |> Maybe.withDefault (Expect.fail "Wrong result")
+        , test "is adjacent" <|
+            \_ ->
+                Expect.equal True (isAdjacent ( 5, 5 ) ( 4, 5 ))
+        ]
 
 
 overlapTests : Test

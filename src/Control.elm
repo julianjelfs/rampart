@@ -1,11 +1,11 @@
 module Control exposing (..)
 
 import Browser.Events exposing (onKeyDown, onMouseMove)
-import Data exposing (Model, Msg(..), roundOne)
+import Data exposing (Model, Msg(..), Phase(..), roundOne)
 import FloodFill exposing (findBuildableCells)
 import Json.Decode as D
 import Set exposing (Set)
-import Shapes exposing (getRandomShape, rotate90)
+import Shapes exposing (cellsOccupiedByShape, getRandomShape, rotate90)
 import TestData exposing (enclosed)
 
 
@@ -21,6 +21,7 @@ init =
       , buildable = findBuildableCells roundOne enclosed cannon
       , currentShape = Nothing
       , overCell = Nothing
+      , phase = Building
       }
     , getRandomShape
     )
@@ -30,20 +31,48 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CellClicked cell ->
-            let
-                walls =
-                    if Set.member cell model.walls then
-                        Set.remove cell model.walls
+            case model.currentShape of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                    else
-                        Set.insert cell model.walls
-            in
-            ( { model
-                | walls = walls
-                , buildable = findBuildableCells model.spec walls model.cannon
-              }
-            , getRandomShape
-            )
+                Just shape ->
+                    let
+                        footprint =
+                            cellsOccupiedByShape cell shape
+
+                        obstacles =
+                            Set.union model.walls model.cannon |> Set.union model.spec.castles
+
+                        valid =
+                            Set.intersect footprint obstacles |> Set.isEmpty
+
+                        walls =
+                            if valid then
+                                Set.union model.walls footprint
+
+                            else
+                                model.walls
+
+                        buildable =
+                            if valid then
+                                findBuildableCells model.spec walls model.cannon
+
+                            else
+                                model.buildable
+
+                        cmd =
+                            if valid then
+                                getRandomShape
+
+                            else
+                                Cmd.none
+                    in
+                    ( { model
+                        | walls = walls
+                        , buildable = buildable
+                      }
+                    , cmd
+                    )
 
         MouseOver p ->
             ( { model | overCell = Just p }, Cmd.none )

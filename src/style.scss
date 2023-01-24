@@ -9,6 +9,15 @@ body {
   height: 100vh;
 }
 
+.root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  fill: red;
+}
+
 .wrapper {
   height: 100vh;
 }
@@ -22,51 +31,51 @@ body {
 }
 
 .grid {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  height: 100%;
-
-  &__row {
-    width: 100%;
-    display: flex;
-    height: 100%;
-  }
-
+  fill: red;
   &__cell {
-    flex: 1;
-    border: 1px solid var(--bd);
     cursor: pointer;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 1px;
 
     &--land {
-      background-color: greenyellow;
+      fill: greenyellow;
       &.grid__cell--shadow {
-        background-color: darken(greenyellow, 15%);
+        fill: darken(greenyellow, 15%);
       }
     }
 
     &--sea {
-      background-color: slateblue;
+      fill: slateblue;
       &.grid__cell--shadow {
-        background-color: darken(slateblue, 15%);
+        fill: darken(slateblue, 15%);
       }
     }
 
     &--buildable {
-      background-color: blue;
+      fill: blue;
       &.grid__cell--shadow {
-        background-color: darken(blue, 15%);
+        fill: darken(blue, 15%);
       }
     }
 
     &--castle {
-      // background-color: red;
+      fill: peach;
+      &.grid__cell--shadow {
+        fill: darken(hotpink, 15%);
+      }
+    }
+
+    &--cannon {
+      fill: yellow;
+      &.grid__cell--shadow {
+        fill: darken(yellow, 15%);
+      }
     }
 
     &--wall {
-      background-color: brown;
+      fill: brown;
       &.grid__cell--shadow {
-        background-color: darken(brown, 15%);
+        fill: darken(brown, 15%);
       }
     }
   }

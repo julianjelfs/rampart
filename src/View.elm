@@ -8,7 +8,7 @@ import Html.Attributes exposing (class, classList, style)
 import Html.Events exposing (onClick, onMouseOut, onMouseOver)
 import Matrix exposing (Matrix)
 import Set exposing (Set)
-import Shapes exposing (Shape, overlapsShape)
+import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractPoint)
 
 
 view : Model -> Html Msg
@@ -21,25 +21,12 @@ floatToPixelString f =
     String.fromFloat f ++ "px"
 
 
-subtractPoint : Point -> Point -> Point
-subtractPoint ( x1, y1 ) ( x2, y2 ) =
-    ( (x1 - x2) + 2, (y1 - y2) + 2 )
-
-
-adjacent : Point -> Point -> Bool
-adjacent ( x1, y1 ) ( x2, y2 ) =
-    abs (x1 - x2)
-        <= 1
-        && abs (y1 - y2)
-        <= 1
-
-
 isCellShadowed : Set Point -> Set Point -> Set Point -> Point -> Point -> Shape -> Bool
 isCellShadowed walls cannon castles cell overCell currentShape =
     not (Set.member cell castles)
         && not (Set.member cell cannon)
         && not (Set.member cell walls)
-        && adjacent cell overCell
+        && isAdjacent cell overCell
         && overlapsShape (subtractPoint cell overCell) currentShape
 
 

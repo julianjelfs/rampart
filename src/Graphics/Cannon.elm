@@ -4,8 +4,8 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
 
-cannon =
-    svg [ viewBox "0 0 24 24" ]
+cannon w h x_ y_ =
+    svg [ width w, height h, x x_, y y_, viewBox "0 0 24 24" ]
         [ defs []
             [ node "linearGradient"
                 [ id "a" ]

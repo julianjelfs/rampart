@@ -4,6 +4,7 @@ import Data exposing (Msg(..), Point)
 import List.Extra exposing (getAt)
 import Matrix exposing (Matrix)
 import Random exposing (Generator)
+import Set exposing (Set)
 
 
 type alias Shape =
@@ -24,6 +25,51 @@ getShape : Int -> Shape
 getShape i =
     getAt i allShapes
         |> Maybe.withDefault (Matrix.identity 3)
+
+
+adjacentCells : Point -> List Point
+adjacentCells ( x, y ) =
+    [ ( x - 1, y - 1 )
+    , ( x - 1, y )
+    , ( x - 1, y + 1 )
+    , ( x, y - 1 )
+    , ( x, y )
+    , ( x, y + 1 )
+    , ( x + 1, y - 1 )
+    , ( x + 1, y )
+    , ( x + 1, y + 1 )
+    ]
+
+
+isAdjacent : Point -> Point -> Bool
+isAdjacent ( x1, y1 ) ( x2, y2 ) =
+    abs (x1 - x2)
+        <= 1
+        && abs (y1 - y2)
+        <= 1
+
+
+subtractPoint : Point -> Point -> Point
+subtractPoint ( x1, y1 ) ( x2, y2 ) =
+    ( (x1 - x2) + 2, (y1 - y2) + 2 )
+
+
+cellsOccupiedByShape : Point -> Shape -> Set Point
+cellsOccupiedByShape center shape =
+    adjacentCells center
+        |> List.filterMap
+            (\p ->
+                let
+                    ( x, y ) =
+                        subtractPoint p center
+                in
+                if Matrix.get x y shape == Just 1 then
+                    Just p
+
+                else
+                    Nothing
+            )
+        |> Set.fromList
 
 
 overlapsShape : Point -> Shape -> Bool
