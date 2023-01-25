@@ -1,5 +1,6 @@
 module Data exposing (..)
 
+import Countdown.Data as Countdown
 import Matrix exposing (Matrix)
 import Set exposing (Set)
 import TestData exposing (enclosed)
@@ -41,6 +42,7 @@ type alias Model =
     , currentShape : Maybe (Matrix Int)
     , overCell : Maybe Point
     , phase : Phase
+    , countdown : Countdown.Model
     }
 
 
@@ -50,3 +52,4 @@ type Msg
     | KeyDown Int
     | MouseOver Point
     | MouseOut
+    | CountdownMsg Countdown.Msg

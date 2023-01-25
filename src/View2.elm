@@ -1,9 +1,10 @@
 module View2 exposing (..)
 
+import Countdown.View as Countdown
 import Data exposing (Model, Msg(..), Point)
 import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
-import Html exposing (Html)
+import Html exposing (Html, div)
 import Matrix exposing (Matrix)
 import Set exposing (Set)
 import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractPoint)
@@ -14,8 +15,11 @@ import Svg.Events exposing (onClick, onMouseOut, onMouseOver)
 
 view : Model -> Html Msg
 view model =
-    svg [ preserveAspectRatio "none", class "root", width "100%", height "100%", viewBox "0 0 1000 800" ]
-        (grid model)
+    div []
+        [ Html.map CountdownMsg (Countdown.view model.countdown)
+        , svg [ preserveAspectRatio "none", class "root", width "100%", height "100%", viewBox "0 0 1000 800" ]
+            (grid model)
+        ]
 
 
 floatToPixelString : Float -> String
@@ -91,6 +95,15 @@ grid { spec, walls, cannon, buildable, currentShape, overCell } =
 
                         buildable_ =
                             Set.member ( c, r ) buildable
+
+                        shadowed =
+                            Maybe.map2
+                                (\shape over ->
+                                    isCellShadowed walls cannon spec.castles ( c, r ) over shape
+                                )
+                                currentShape
+                                overCell
+                                |> Maybe.withDefault False
                     in
                     rect
                         [ class "grid__cell"
@@ -108,15 +121,7 @@ grid { spec, walls, cannon, buildable, currentShape, overCell } =
                             , ( "grid__cell--cannon", cannon_ )
                             , ( "grid__cell--buildable", buildable_ )
                             , ( "grid__cell--wall", wall )
-                            , ( "grid__cell--shadow"
-                              , Maybe.map2
-                                    (\shape over ->
-                                        isCellShadowed walls cannon spec.castles ( c, r ) over shape
-                                    )
-                                    currentShape
-                                    overCell
-                                    |> Maybe.withDefault False
-                              )
+                            , ( "grid__cell--shadow", shadowed )
                             ]
                         ]
                         []

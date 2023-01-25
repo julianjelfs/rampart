@@ -1,6 +1,7 @@
 module Control exposing (..)
 
 import Browser.Events exposing (onKeyDown, onMouseMove)
+import Countdown.Control as Countdown
 import Data exposing (Model, Msg(..), Phase(..), roundOne)
 import FloodFill exposing (findBuildableCells)
 import Json.Decode as D
@@ -22,6 +23,7 @@ init =
       , currentShape = Nothing
       , overCell = Nothing
       , phase = Building
+      , countdown = Countdown.init 30
       }
     , getRandomShape
     )
@@ -30,6 +32,13 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        CountdownMsg subMsg ->
+            let
+                subModel =
+                    Countdown.update subMsg model.countdown
+            in
+            ( { model | countdown = subModel }, Cmd.none )
+
         CellClicked cell ->
             case model.currentShape of
                 Nothing ->
@@ -94,12 +103,19 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.currentShape of
-        Nothing ->
-            Sub.none
+    let
+        countdown =
+            Sub.map CountdownMsg (Countdown.subscriptions model.countdown)
+    in
+    Sub.batch
+        [ countdown
+        , case model.currentShape of
+            Nothing ->
+                Sub.none
 
-        Just shape ->
-            onKeyDown (D.map KeyDown keyDecoder)
+            Just shape ->
+                onKeyDown (D.map KeyDown keyDecoder)
+        ]
 
 
 keyDecoder : D.Decoder Int

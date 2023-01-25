@@ -22,16 +22,19 @@ body {
   height: 100vh;
 }
 
-.ghostshape {
+.countdown {
   position: absolute;
   z-index: 1;
-  top: 100px;
-  left: 100px;
-  pointer-events: none;
+  padding: 20px;
+  background-color: red;
+  color: white;
+  font-weight: bold;
+  right: 10px;
+  top: 10px;
 }
 
 .grid {
-  fill: red;
+  fill: greenyellow;
   &__cell {
     cursor: pointer;
     stroke: rgba(255, 255, 255, 0.1);
