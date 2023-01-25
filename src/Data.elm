@@ -52,4 +52,5 @@ type Msg
     | KeyDown Int
     | MouseOver Point
     | MouseOut
+    | StartCountdown Int
     | CountdownMsg Countdown.Msg

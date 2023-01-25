@@ -1,25 +1,38 @@
 module Countdown.Control exposing (..)
 
-import Countdown.Data exposing (Model, Msg(..))
+import Countdown.Data exposing (Model(..), Msg(..))
 import Time exposing (Posix)
 
 
-init : Int -> Model
-init n =
-    { remaining = n }
+init : Model
+init =
+    Idle
+
+
+start : Int -> Model
+start =
+    CountingDown
 
 
 update : Msg -> Model -> Model
 update msg model =
-    case msg of
-        Tick _ ->
-            { model | remaining = model.remaining - 1 }
+    case ( model, msg ) of
+        ( Idle, _ ) ->
+            model
+
+        ( CountingDown n, Tick _ ) ->
+            if n > 0 then
+                CountingDown (n - 1)
+
+            else
+                Idle
 
 
 subscriptions : Model -> Sub Msg
-subscriptions { remaining } =
-    if remaining > 0 then
-        Time.every 1000 Tick
+subscriptions model =
+    case model of
+        Idle ->
+            Sub.none
 
-    else
-        Sub.none
+        CountingDown _ ->
+            Time.every 1000 Tick

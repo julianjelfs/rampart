@@ -23,7 +23,7 @@ init =
       , currentShape = Nothing
       , overCell = Nothing
       , phase = Building
-      , countdown = Countdown.init 30
+      , countdown = Countdown.init
       }
     , getRandomShape
     )
@@ -32,6 +32,9 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        StartCountdown n ->
+            ( { model | countdown = Countdown.start n }, Cmd.none )
+
         CountdownMsg subMsg ->
             let
                 subModel =

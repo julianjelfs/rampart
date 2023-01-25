@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Control exposing (init, subscriptions, update)
 import Data exposing (Model, Msg(..))
-import View2 exposing (view)
+import View exposing (view)
 
 
 main : Program () Model Msg
