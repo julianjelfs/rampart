@@ -2,7 +2,7 @@ module Control exposing (..)
 
 import Browser.Events exposing (onKeyDown, onMouseMove)
 import Countdown.Control as Countdown
-import Data exposing (Model, Msg(..), Phase(..), roundOne)
+import Data exposing (Model, Msg(..), Phase(..), Point, roundOne)
 import FloodFill exposing (findBuildableCells)
 import Json.Decode as D
 import Set exposing (Set)
@@ -12,79 +12,126 @@ import TestData exposing (enclosed)
 
 init : ( Model, Cmd Msg )
 init =
-    let
-        cannon =
-            Set.fromList [ ( 2, 6 ), ( 3, 6 ), ( 4, 6 ) ]
-    in
     ( { spec = roundOne
-      , walls = enclosed
-      , cannon = cannon
-      , buildable = findBuildableCells roundOne enclosed cannon
+      , walls = Set.empty
+      , cannon = Set.empty
+      , buildable = Set.empty
       , currentShape = Nothing
       , overCell = Nothing
-      , phase = Building
+      , phase = Start
       , countdown = Countdown.init
+      , base = Nothing
       }
     , getRandomShape
     )
 
 
+autoEnclose : Int -> Point -> Set Point
+autoEnclose padding ( x, y ) =
+    let
+        xr =
+            List.range (x - padding) (x + padding)
+
+        yr =
+            List.range (y - padding) (y + padding)
+
+        top =
+            List.map (\x_ -> ( x_, y - padding )) xr
+
+        bottom =
+            List.map (\x_ -> ( x_, y + padding )) xr
+
+        left =
+            List.map (\y_ -> ( x - padding, y_ )) yr
+
+        right =
+            List.map (\y_ -> ( x + padding, y_ )) yr
+
+        all =
+            top ++ bottom ++ left ++ right
+    in
+    Set.fromList all
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        StartCountdown n ->
-            ( { model | countdown = Countdown.start n }, Cmd.none )
+        SelectBase p ->
+            ( { model | base = Just p }, Cmd.none )
+
+        StartGame ->
+            ( { model | phase = CastleSelection, countdown = Countdown.start "Select your starting castle" 10 }, Cmd.none )
+
+        StartCountdown l n ->
+            ( { model | countdown = Countdown.start l n }, Cmd.none )
 
         CountdownMsg subMsg ->
             let
-                subModel =
+                ( subModel, finished ) =
                     Countdown.update subMsg model.countdown
             in
-            ( { model | countdown = subModel }, Cmd.none )
+            case ( model.phase, finished ) of
+                ( CastleSelection, True ) ->
+                    ( { model | phase = Placing, countdown = Countdown.start "Place your cannons!" 20 }, Cmd.none )
+
+                _ ->
+                    ( { model | countdown = subModel }, Cmd.none )
 
         CellClicked cell ->
-            case model.currentShape of
-                Nothing ->
+            case model.phase of
+                CastleSelection ->
+                    if Set.member cell model.spec.castles then
+                        ( { model | base = Just cell, walls = autoEnclose 3 cell }, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                Building ->
+                    case model.currentShape of
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                        Just shape ->
+                            let
+                                footprint =
+                                    cellsOccupiedByShape cell shape
+
+                                obstacles =
+                                    Set.union model.walls model.cannon |> Set.union model.spec.castles
+
+                                valid =
+                                    Set.intersect footprint obstacles |> Set.isEmpty
+
+                                walls =
+                                    if valid then
+                                        Set.union model.walls footprint
+
+                                    else
+                                        model.walls
+
+                                buildable =
+                                    if valid then
+                                        findBuildableCells model.spec walls model.cannon
+
+                                    else
+                                        model.buildable
+
+                                cmd =
+                                    if valid then
+                                        getRandomShape
+
+                                    else
+                                        Cmd.none
+                            in
+                            ( { model
+                                | walls = walls
+                                , buildable = buildable
+                              }
+                            , cmd
+                            )
+
+                _ ->
                     ( model, Cmd.none )
-
-                Just shape ->
-                    let
-                        footprint =
-                            cellsOccupiedByShape cell shape
-
-                        obstacles =
-                            Set.union model.walls model.cannon |> Set.union model.spec.castles
-
-                        valid =
-                            Set.intersect footprint obstacles |> Set.isEmpty
-
-                        walls =
-                            if valid then
-                                Set.union model.walls footprint
-
-                            else
-                                model.walls
-
-                        buildable =
-                            if valid then
-                                findBuildableCells model.spec walls model.cannon
-
-                            else
-                                model.buildable
-
-                        cmd =
-                            if valid then
-                                getRandomShape
-
-                            else
-                                Cmd.none
-                    in
-                    ( { model
-                        | walls = walls
-                        , buildable = buildable
-                      }
-                    , cmd
-                    )
 
         MouseOver p ->
             ( { model | overCell = Just p }, Cmd.none )

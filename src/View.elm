@@ -1,7 +1,7 @@
 module View exposing (..)
 
 import Countdown.View as Countdown
-import Data exposing (Model, Msg(..), Point)
+import Data exposing (Model, Msg(..), Phase(..), Point)
 import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
 import Html exposing (Html, button, div)
@@ -15,11 +15,25 @@ import Svg.Events exposing (onClick, onMouseOut, onMouseOver)
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ button [ onClick (StartCountdown 25) ] [ text "Start countdown" ]
-        , Html.map CountdownMsg (Countdown.view model.countdown)
-        , svg [ preserveAspectRatio "none", class "root", width "100%", height "100%", viewBox "0 0 1000 800" ]
-            (grid model)
+    case model.phase of
+        Start ->
+            startView
+
+        _ ->
+            div []
+                [ Html.map CountdownMsg (Countdown.view model.countdown)
+                , svg [ preserveAspectRatio "none", class "root", width "100%", height "100%", viewBox "0 0 1000 800" ]
+                    (grid model)
+                ]
+
+
+startView : Html Msg
+startView =
+    div [ class "welcome" ]
+        [ div [ class "welcome__card" ]
+            [ div [ class "welcome__title" ] [ text "Welcome to Rampart" ]
+            , button [ onClick StartGame, class "welcome__start" ] [ text "Start" ]
+            ]
         ]
 
 
@@ -44,7 +58,7 @@ classList list =
 
 
 grid : Model -> List (Svg Msg)
-grid { spec, walls, cannon, buildable, currentShape, overCell } =
+grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
     let
         cellWidth =
             1000 / toFloat (Tuple.first spec.dimensions)
@@ -62,7 +76,7 @@ grid { spec, walls, cannon, buildable, currentShape, overCell } =
             Set.toList spec.castles
                 |> List.map
                     (\( x, y ) ->
-                        Castle.castle
+                        Castle.castle (CellClicked ( x, y ))
                             (cellWidth |> String.fromFloat)
                             (cellHeight |> String.fromFloat)
                             (toFloat x * cellWidth |> String.fromFloat)
@@ -98,13 +112,17 @@ grid { spec, walls, cannon, buildable, currentShape, overCell } =
                             Set.member ( c, r ) buildable
 
                         shadowed =
-                            Maybe.map2
-                                (\shape over ->
-                                    isCellShadowed walls cannon spec.castles ( c, r ) over shape
-                                )
-                                currentShape
-                                overCell
-                                |> Maybe.withDefault False
+                            if phase /= Building then
+                                False
+
+                            else
+                                Maybe.map2
+                                    (\shape over ->
+                                        isCellShadowed walls cannon spec.castles ( c, r ) over shape
+                                    )
+                                    currentShape
+                                    overCell
+                                    |> Maybe.withDefault False
                     in
                     rect
                         [ class "grid__cell"

@@ -9,23 +9,23 @@ init =
     Idle
 
 
-start : Int -> Model
-start =
-    CountingDown
+start : String -> Int -> Model
+start label time =
+    CountingDown label time
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Bool )
 update msg model =
     case ( model, msg ) of
         ( Idle, _ ) ->
-            model
+            ( model, True )
 
-        ( CountingDown n, Tick _ ) ->
+        ( CountingDown l n, Tick _ ) ->
             if n > 0 then
-                CountingDown (n - 1)
+                ( CountingDown l (n - 1), False )
 
             else
-                Idle
+                ( Idle, True )
 
 
 subscriptions : Model -> Sub Msg
@@ -34,5 +34,5 @@ subscriptions model =
         Idle ->
             Sub.none
 
-        CountingDown _ ->
+        CountingDown _ _ ->
             Time.every 1000 Tick

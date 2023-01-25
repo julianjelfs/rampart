@@ -11,5 +11,8 @@ view model =
         Idle ->
             text ""
 
-        CountingDown n ->
-            div [ class "countdown" ] [ text <| String.fromInt n ]
+        CountingDown l n ->
+            div [ class "countdown" ]
+                [ div [ class "countdown__title" ] [ text l ]
+                , div [ class "countdown__time" ] [ text <| String.fromInt n ]
+                ]

@@ -2,10 +2,11 @@ module Graphics.Castle exposing (castle)
 
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Svg.Events exposing (onClick)
 
 
-castle w h x_ y_ =
-    svg [ width w, height h, x x_, y y_, viewBox "0 0 24 24" ]
+castle msg w h x_ y_ =
+    svg [ onClick msg, width w, height h, x x_, y y_, viewBox "0 0 24 24" ]
         [ g []
             [ Svg.path [ d "M8.526 6.164h6.383v8.517H8.526z", fill "#aca299" ]
                 []

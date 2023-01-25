@@ -17,7 +17,7 @@ type alias Spec =
 
 roundOne : Spec
 roundOne =
-    { castles = Set.fromList [ ( 8, 30 ), ( 25, 2 ), ( 3, 8 ), ( 12, 12 ), ( 20, 20 ) ]
+    { castles = Set.fromList [ ( 8, 30 ), ( 25, 5 ), ( 3, 8 ), ( 12, 12 ), ( 20, 20 ) ]
     , dimensions = ( 60, 35 )
     , ships = 5
     }
@@ -32,6 +32,7 @@ type Phase
     | Placing
     | Battling
     | CastleSelection
+    | Start
 
 
 type alias Model =
@@ -43,6 +44,7 @@ type alias Model =
     , overCell : Maybe Point
     , phase : Phase
     , countdown : Countdown.Model
+    , base : Maybe Point
     }
 
 
@@ -52,5 +54,7 @@ type Msg
     | KeyDown Int
     | MouseOver Point
     | MouseOut
-    | StartCountdown Int
+    | StartCountdown String Int
     | CountdownMsg Countdown.Msg
+    | StartGame
+    | SelectBase Point
