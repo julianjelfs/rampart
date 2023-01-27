@@ -1,0 +1,53 @@
+.grid {
+  fill: greenyellow;
+  &__cell {
+    cursor: pointer;
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 1px;
+
+    &--land {
+      fill: #017b01;
+      &.grid__cell--shadow {
+        fill: darken(greenyellow, 15%);
+      }
+    }
+    &--even {
+      fill: #016a02;
+    }
+
+    &--sea {
+      fill: #0d6fa9;
+      &.grid__cell--shadow {
+        fill: darken(slateblue, 15%);
+      }
+    }
+
+    &--buildable {
+      fill: #05017b;
+      &.grid__cell--shadow {
+        fill: darken(blue, 15%);
+      }
+    }
+
+    // &--castle {
+    //   fill: orange;
+    //   &.grid__cell--shadow {
+    //     fill: darken(orange, 15%);
+    //   }
+    // }
+
+    &--cannon {
+      fill: yellow;
+      &.grid__cell--shadow {
+        fill: darken(yellow, 15%);
+      }
+    }
+
+    &--wall {
+      fill: #5f2626;
+      &.grid__cell--shadow {
+        fill: darken(#5f2626, 15%);
+      }
+    }
+  }
+}

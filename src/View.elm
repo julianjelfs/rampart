@@ -135,8 +135,10 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
                         , onMouseOut MouseOut
                         , classList
                             [ ( "grid__cell--land", c < 30 )
+                            , ( "grid__cell--even", modBy 2 r == 1 && modBy 2 c == 0 || modBy 2 r == 0 && modBy 2 c == 1 )
                             , ( "grid__cell--sea", c >= 30 )
-                            , ( "grid__cell--castle", castle )
+
+                            -- , ( "grid__cell--castle", castle )
                             , ( "grid__cell--cannon", cannon_ )
                             , ( "grid__cell--buildable", buildable_ )
                             , ( "grid__cell--wall", wall )

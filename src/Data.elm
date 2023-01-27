@@ -58,3 +58,4 @@ type Msg
     | CountdownMsg Countdown.Msg
     | StartGame
     | SelectBase Point
+    | BuildWall (List Point)

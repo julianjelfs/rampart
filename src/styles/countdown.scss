@@ -1,0 +1,22 @@
+.countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  font-size: 22px;
+  font-weight: bold;
+  position: absolute;
+  z-index: 1;
+  padding: 20px;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: bold;
+  right: 20px;
+  top: 10px;
+  box-shadow: 10px 10px 0 #000000;
+  border-radius: 10px;
+
+  &__time {
+    font-size: 42px;
+  }
+}

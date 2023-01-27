@@ -5,8 +5,10 @@ import Countdown.Control as Countdown
 import Data exposing (Model, Msg(..), Phase(..), Point, roundOne)
 import FloodFill exposing (findBuildableCells)
 import Json.Decode as D
+import Process
 import Set exposing (Set)
 import Shapes exposing (cellsOccupiedByShape, getRandomShape, rotate90)
+import Task
 import TestData exposing (enclosed)
 
 
@@ -26,7 +28,7 @@ init =
     )
 
 
-autoEnclose : Int -> Point -> Set Point
+autoEnclose : Int -> Point -> List Point
 autoEnclose padding ( x, y ) =
     let
         xr =
@@ -48,9 +50,9 @@ autoEnclose padding ( x, y ) =
             List.map (\y_ -> ( x + padding, y_ )) yr
 
         all =
-            top ++ bottom ++ left ++ right
+            top ++ right ++ List.reverse bottom ++ List.reverse left
     in
-    Set.fromList all
+    all
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -74,17 +76,33 @@ update msg model =
                 ( CastleSelection, True ) ->
                     ( { model | phase = Placing, countdown = Countdown.start "Place your cannons!" 20 }, Cmd.none )
 
+                ( Placing, True ) ->
+                    ( { model | phase = Battling, countdown = Countdown.start "Commence battle" 20 }, Cmd.none )
+
                 _ ->
                     ( { model | countdown = subModel }, Cmd.none )
 
+        BuildWall blocks ->
+            case blocks of
+                x :: xs ->
+                    let
+                        walls =
+                            Set.insert x model.walls
+                    in
+                    ( { model | walls = walls, buildable = findBuildableCells model.spec walls model.cannon }
+                    , Task.perform (\_ -> BuildWall xs) (Process.sleep 100)
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
         CellClicked cell ->
             case model.phase of
-                CastleSelection ->
-                    if Set.member cell model.spec.castles then
-                        ( { model | base = Just cell, walls = autoEnclose 3 cell }, Cmd.none )
+                Placing ->
+                    placeCannon cell model
 
-                    else
-                        ( model, Cmd.none )
+                CastleSelection ->
+                    selectCastle cell model
 
                 Building ->
                     case model.currentShape of
@@ -149,6 +167,28 @@ update msg model =
 
         NextShape shape ->
             ( { model | currentShape = Just shape }, Cmd.none )
+
+
+selectCastle : Point -> Model -> ( Model, Cmd Msg )
+selectCastle cell model =
+    if Set.member cell model.spec.castles then
+        let
+            walls =
+                autoEnclose 3 cell
+        in
+        ( { model | base = Just cell }, Task.perform (\_ -> BuildWall walls) (Task.succeed ()) )
+
+    else
+        ( model, Cmd.none )
+
+
+placeCannon : Point -> Model -> ( Model, Cmd Msg )
+placeCannon cell model =
+    if Set.member cell model.buildable then
+        ( { model | cannon = Set.insert cell model.cannon }, Cmd.none )
+
+    else
+        ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
