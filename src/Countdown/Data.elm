@@ -5,7 +5,7 @@ import Time exposing (Posix)
 
 type Model
     = Idle
-    | Intro String Int
+    | Intro String String Int
     | CountingDown String Int
 
 

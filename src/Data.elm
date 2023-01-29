@@ -23,6 +23,11 @@ roundOne =
     }
 
 
+defaultCastle : Point
+defaultCastle =
+    ( 12, 12 )
+
+
 type alias Point =
     ( Int, Int )
 
@@ -57,7 +62,6 @@ type Msg
     | MouseMove ( Int, Int )
     | MouseOver Point
     | MouseOut
-    | StartCountdown String Int
     | CountdownMsg Countdown.Msg
     | StartGame
     | SelectBase Point

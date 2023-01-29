@@ -33,6 +33,12 @@
    - look into how the landing craft work
    - look into how permanent fires work (should prevent subsequent building)
 
+   Round one there are four ships, round two there are seven, then nine, then twelve
+   The ships move in straight lines in random directions and some don't move at all or they move and then stop
+   I _think_ the ships only fire the next cannonball after the first has landed.
+   Some ships fire red cannonballs which leave a burn spot where they impact which cannot be built on
+   Not clear how many rounds there are or what constitutes victory.
+
 5. Building
 
    - run a countdown
@@ -42,6 +48,17 @@
    - calculate enclosed castles
 
 6. Graphics
+
    - consider rendering (html, svg, webgl, 3D, isometric)
    - how to render the cannonballs in flight
    - images for castles, cannons, ships, cannonballs
+
+7. Sound effect
+   - see if we can record samples from the original game.
+   - or maybe the audio samples can be downloaded from somewhere.
+   - definitely important part of the feel of the game
+
+## Problems
+
+Castles and cannons need to occupy 4 cells really.
+We need to somehow encode where the coastline is.

@@ -11,14 +11,14 @@ view model =
         Idle ->
             text ""
 
-        Intro l n ->
+        Intro l s n ->
             div [ class "countdown countdown__intro" ]
                 [ div [ class "countdown__title" ] [ text l ]
-                , div [ class "countdown__time" ] [ text <| "You have " ++ String.fromInt n ++ " seconds" ]
+                , div [ class "countdown__subtitle" ] [ text s ]
                 ]
 
         CountingDown l n ->
             div [ class "countdown" ]
                 [ div [ class "countdown__title" ] [ text l ]
-                , div [ class "countdown__time" ] [ text <| String.fromInt n ]
+                , div [ class "countdown__time" ] [ text <| String.padLeft 2 '0' <| String.fromInt n ]
                 ]

@@ -4,6 +4,7 @@ import Countdown.View as Countdown
 import Data exposing (Model, Msg(..), Phase(..), Point)
 import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
+import Graphics.Ship as Ship
 import Html exposing (Html, button, div)
 import Html.Attributes as H exposing (style)
 import Set exposing (Set)
@@ -82,6 +83,13 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
 
         rows =
             List.range 0 (Tuple.second spec.dimensions)
+
+        ships =
+            [ Ship.ship "700" "100"
+            , Ship.ship "800" "350"
+            , Ship.ship "650" "420"
+            , Ship.ship "850" "550"
+            ]
 
         castles =
             Set.toList spec.castles
@@ -163,3 +171,4 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
         rows
         ++ castles
         ++ cannons
+        ++ ships

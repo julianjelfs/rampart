@@ -11,9 +11,29 @@ init =
     Idle
 
 
-start : String -> Int -> ( Model, Cmd Msg )
-start label time =
-    ( Intro label time
+placeCannon : ( Model, Cmd Msg )
+placeCannon =
+    start "Place your cannons" "Position inside fort walls" 10
+
+
+prepareForBattle : ( Model, Cmd Msg )
+prepareForBattle =
+    start "Prepare for battle!" "Shoot at enemy ships" 15
+
+
+selectCastle : ( Model, Cmd Msg )
+selectCastle =
+    start "Select your home castle" "You have 10 seconds" 10
+
+
+buildAndRepair : ( Model, Cmd Msg )
+buildAndRepair =
+    start "Build and repair" "Surround castles, repair holes" 25
+
+
+start : String -> String -> Int -> ( Model, Cmd Msg )
+start label sub time =
+    ( Intro label sub time
     , Task.perform (\_ -> FinishIntro) (Process.sleep 5000)
     )
 
@@ -24,13 +44,13 @@ update msg model =
         ( Idle, _ ) ->
             ( model, True )
 
-        ( Intro l n, msg_ ) ->
+        ( Intro l s n, msg_ ) ->
             case msg_ of
                 FinishIntro ->
                     ( CountingDown l n, False )
 
                 _ ->
-                    ( Intro l n, False )
+                    ( Intro l s n, False )
 
         ( CountingDown l n, msg_ ) ->
             case msg_ of
@@ -51,7 +71,7 @@ subscriptions model =
         Idle ->
             Sub.none
 
-        Intro _ _ ->
+        Intro _ _ _ ->
             Sub.none
 
         _ ->

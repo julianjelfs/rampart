@@ -2,8 +2,8 @@ module Control exposing (..)
 
 import Browser.Events exposing (onKeyDown, onMouseMove)
 import Countdown.Control as Countdown
-import Data exposing (Model, Msg(..), Phase(..), Point, roundOne)
-import FloodFill exposing (findBuildableCells)
+import Data exposing (Model, Msg(..), Phase(..), Point, defaultCastle, roundOne)
+import FloodFill exposing (findBuildableCells, findEnclosedCastles)
 import Json.Decode as D
 import Process
 import Set exposing (Set)
@@ -69,16 +69,9 @@ update msg model =
         StartGame ->
             let
                 ( countdown, countdownCmd ) =
-                    Countdown.start "Select your starting castle" 10
+                    Countdown.selectCastle
             in
             ( { model | phase = CastleSelection, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
-
-        StartCountdown l n ->
-            let
-                ( countdown, countdownCmd ) =
-                    Countdown.start l n
-            in
-            ( { model | countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
         CountdownMsg subMsg ->
             let
@@ -87,18 +80,40 @@ update msg model =
             in
             case ( model.phase, finished ) of
                 ( CastleSelection, True ) ->
-                    let
-                        ( countdown, countdownCmd ) =
-                            Countdown.start "Place your cannons!" 20
-                    in
-                    ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                    if model.base == Nothing then
+                        selectCastle defaultCastle model
+
+                    else
+                        let
+                            ( countdown, countdownCmd ) =
+                                Countdown.placeCannon
+                        in
+                        ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
                 ( Placing, True ) ->
                     let
                         ( countdown, countdownCmd ) =
-                            Countdown.start "Commence battle" 20
+                            Countdown.prepareForBattle
                     in
                     ( { model | phase = Battling, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+
+                ( Battling, True ) ->
+                    let
+                        ( countdown, countdownCmd ) =
+                            Countdown.buildAndRepair
+                    in
+                    ( { model | phase = Building, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+
+                ( Building, True ) ->
+                    let
+                        -- if you have no enclosed castles then I guess it's game over
+                        enclosed =
+                            findEnclosedCastles model.spec model.walls model.cannon
+
+                        ( countdown, countdownCmd ) =
+                            Countdown.placeCannon
+                    in
+                    ( { model | phase = Placing, countdown = countdown, availableCannon = model.availableCannon + 1 + Set.size enclosed }, Cmd.map CountdownMsg countdownCmd )
 
                 _ ->
                     ( { model | countdown = subModel }, Cmd.none )
@@ -117,7 +132,7 @@ update msg model =
                 _ ->
                     let
                         ( countdown, countdownCmd ) =
-                            Countdown.start "Place your cannons!" 20
+                            Countdown.placeCannon
                     in
                     ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
@@ -196,7 +211,7 @@ update msg model =
 
 selectCastle : Point -> Model -> ( Model, Cmd Msg )
 selectCastle cell model =
-    if Set.member cell model.spec.castles then
+    if Set.member cell model.spec.castles && model.base == Nothing then
         let
             walls =
                 autoEnclose 3 cell
@@ -222,7 +237,7 @@ placeCannon cell model =
 
         ( countdown, countdownCmd ) =
             if remaining == 0 then
-                Countdown.start "Commence battle" 20
+                Countdown.prepareForBattle
 
             else
                 ( model.countdown, Cmd.none )
