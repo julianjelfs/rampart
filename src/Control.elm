@@ -22,7 +22,7 @@ init =
       , overCell = Nothing
       , phase = Start
       , countdown = Countdown.init
-      , base = Nothing
+      , castleSelected = False
       , availableCannon = 3
       , mousePos = Nothing
       }
@@ -63,9 +63,6 @@ update msg model =
         MouseMove p ->
             ( { model | mousePos = Just p }, Cmd.none )
 
-        SelectBase p ->
-            ( { model | base = Just p }, Cmd.none )
-
         StartGame ->
             let
                 ( countdown, countdownCmd ) =
@@ -80,7 +77,7 @@ update msg model =
             in
             case ( model.phase, finished ) of
                 ( CastleSelection, True ) ->
-                    if model.base == Nothing then
+                    if not model.castleSelected then
                         selectCastle defaultCastle model
 
                     else
@@ -113,7 +110,13 @@ update msg model =
                         ( countdown, countdownCmd ) =
                             Countdown.placeCannon
                     in
-                    ( { model | phase = Placing, countdown = countdown, availableCannon = model.availableCannon + 1 + Set.size enclosed }, Cmd.map CountdownMsg countdownCmd )
+                    ( { model
+                        | phase = Placing
+                        , countdown = countdown
+                        , availableCannon = model.availableCannon + 1 + Set.size enclosed
+                      }
+                    , Cmd.map CountdownMsg countdownCmd
+                    )
 
                 _ ->
                     ( { model | countdown = subModel }, Cmd.none )
@@ -155,7 +158,7 @@ update msg model =
                                     cellsOccupiedByShape cell shape
 
                                 obstacles =
-                                    Set.union model.walls model.cannon |> Set.union model.spec.castles
+                                    Set.union model.walls model.cannon |> Set.union model.spec.castlePoints
 
                                 valid =
                                     Set.intersect footprint obstacles |> Set.isEmpty
@@ -211,12 +214,12 @@ update msg model =
 
 selectCastle : Point -> Model -> ( Model, Cmd Msg )
 selectCastle cell model =
-    if Set.member cell model.spec.castles && model.base == Nothing then
+    if Set.member cell model.spec.castlePoints && not model.castleSelected then
         let
             walls =
                 autoEnclose 3 cell
         in
-        ( { model | base = Just cell }, Task.perform (\_ -> BuildWall walls) (Task.succeed ()) )
+        ( { model | castleSelected = True }, Task.perform (\_ -> BuildWall walls) (Task.succeed ()) )
 
     else
         ( model, Cmd.none )

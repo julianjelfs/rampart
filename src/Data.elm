@@ -6,18 +6,45 @@ import Set exposing (Set)
 import TestData exposing (enclosed)
 
 
+type Castle
+    = Castle Point
+
+
 type alias Spec =
-    { castles : Set Point
+    { castles : List Castle
+    , castlePoints : Set Point
     , dimensions : Point
     , ships : Int
-
-    -- etc
     }
+
+
+castle : Point -> Castle
+castle =
+    Castle
 
 
 roundOne : Spec
 roundOne =
-    { castles = Set.fromList [ ( 8, 30 ), ( 25, 5 ), ( 3, 8 ), ( 12, 12 ), ( 20, 20 ) ]
+    let
+        castles =
+            [ castle ( 8, 30 ), castle ( 25, 5 ), castle ( 3, 8 ), castle ( 12, 12 ), castle ( 20, 20 ) ]
+
+        points =
+            List.foldr
+                (\(Castle ( x, y )) s ->
+                    Set.fromList
+                        [ ( x, y )
+                        , ( x + 1, y )
+                        , ( x, y + 1 )
+                        , ( x + 1, y + 1 )
+                        ]
+                        |> Set.union s
+                )
+                Set.empty
+                castles
+    in
+    { castles = castles
+    , castlePoints = points
     , dimensions = ( 60, 35 )
     , ships = 5
     }
@@ -50,7 +77,7 @@ type alias Model =
     , overCell : Maybe Point
     , phase : Phase
     , countdown : Countdown.Model
-    , base : Maybe Point
+    , castleSelected : Bool
     , mousePos : Maybe ( Int, Int )
     }
 
@@ -64,5 +91,4 @@ type Msg
     | MouseOut
     | CountdownMsg Countdown.Msg
     | StartGame
-    | SelectBase Point
     | BuildWall (List Point)

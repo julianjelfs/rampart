@@ -1,9 +1,9 @@
 module View exposing (..)
 
 import Countdown.View as Countdown
-import Data exposing (Model, Msg(..), Phase(..), Point)
+import Data exposing (Castle(..), Model, Msg(..), Phase(..), Point)
 import Graphics.Cannon as Cannon
-import Graphics.Castle as Castle
+import Graphics.Castle as CastleSvg
 import Graphics.Ship as Ship
 import Html exposing (Html, button, div)
 import Html.Attributes as H exposing (style)
@@ -92,10 +92,10 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
             ]
 
         castles =
-            Set.toList spec.castles
+            spec.castles
                 |> List.map
-                    (\( x, y ) ->
-                        Castle.castle (CellClicked ( x, y ))
+                    (\(Castle ( x, y )) ->
+                        CastleSvg.castle (CellClicked ( x, y ))
                             (cellWidth |> String.fromFloat)
                             (cellHeight |> String.fromFloat)
                             (toFloat x * cellWidth |> String.fromFloat)
@@ -118,9 +118,6 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
             List.map
                 (\c ->
                     let
-                        castle =
-                            Set.member ( c, r ) spec.castles
-
                         wall =
                             Set.member ( c, r ) walls
 
@@ -156,8 +153,6 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
                             [ ( "grid__cell--land", c < 30 )
                             , ( "grid__cell--even", modBy 2 r == 1 && modBy 2 c == 0 || modBy 2 r == 0 && modBy 2 c == 1 )
                             , ( "grid__cell--sea", c >= 30 )
-
-                            -- , ( "grid__cell--castle", castle )
                             , ( "grid__cell--cannon", cannon_ )
                             , ( "grid__cell--buildable", buildable_ )
                             , ( "grid__cell--wall", wall )

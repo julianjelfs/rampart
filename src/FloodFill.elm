@@ -25,7 +25,7 @@ findBuildableCellsWithinCastleWalls spec walls cannon castle =
 
 findEnclosedCastles : Spec -> Set Point -> Set Point -> Set Point
 findEnclosedCastles spec walls cannon =
-    Set.diff spec.castles (processCell spec walls cannon ( -1, -1 ) Set.empty)
+    Set.diff spec.castlePoints (processCell spec walls cannon ( -1, -1 ) Set.empty)
 
 
 processCell : Spec -> Set Point -> Set Point -> Point -> Set Point -> Set Point
