@@ -1,6 +1,6 @@
 module FloodFillTests exposing (..)
 
-import Data exposing (Point, Spec, roundOne)
+import Data exposing (Point, Spec, castle, pointsFromCastles, roundOne)
 import Expect exposing (Expectation)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles, isInbounds, notVisited)
 import Fuzz exposing (Fuzzer, int, list, string)
@@ -11,7 +11,15 @@ import TestData exposing (enclosed)
 
 testSpec : Spec
 testSpec =
-    { castles = Set.fromList [ ( 2, 2 ) ]
+    let
+        castles =
+            [ castle ( 2, 2 ) ]
+
+        points =
+            pointsFromCastles castles
+    in
+    { castles = castles
+    , castlePoints = points
     , dimensions = ( 10, 10 )
     , ships = 5
     }
@@ -61,11 +69,11 @@ floodFill : Test
 floodFill =
     describe "The floodfill algorithm"
         [ test "finds one enclosed castle at (3,8)" <|
-            \_ -> Expect.equal (Set.fromList [ ( 3, 8 ) ]) (findEnclosedCastles roundOne enclosed Set.empty)
+            \_ -> Expect.equal (Set.fromList [ ( 3, 8 ), ( 3, 9 ), ( 4, 8 ), ( 4, 9 ) ]) (findEnclosedCastles roundOne enclosed Set.empty)
         , test "finds no enclosed castles" <|
             \_ -> Expect.equal Set.empty (findEnclosedCastles testSpec Set.empty Set.empty)
         , test "finds enclosed castle at (2,2)" <|
-            \_ -> Expect.equal (Set.fromList [ ( 2, 2 ) ]) (findEnclosedCastles testSpec testWalls Set.empty)
+            \_ -> Expect.equal (Set.fromList [ ( 2, 2 ), ( 2, 3 ), ( 3, 2 ), ( 3, 3 ) ]) (findEnclosedCastles testSpec testWalls Set.empty)
         , test "is inbounds one" <|
             \_ ->
                 Expect.equal

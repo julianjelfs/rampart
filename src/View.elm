@@ -16,6 +16,10 @@ import Svg.Events exposing (onClick, onMouseOut, onMouseOver)
 
 view : Model -> Html Msg
 view model =
+    let
+        ( w, h ) =
+            model.viewport
+    in
     case model.phase of
         Start ->
             startView
@@ -34,7 +38,13 @@ view model =
                     _ ->
                         text ""
                 , Html.map CountdownMsg (Countdown.view model.countdown)
-                , svg [ preserveAspectRatio "none", class "root", width "100%", height "100%", viewBox "0 0 1000 800" ]
+                , svg
+                    [ preserveAspectRatio "none"
+                    , class "root"
+                    , width "100%"
+                    , height "100%"
+                    , viewBox <| "0 0 " ++ String.fromFloat w ++ " " ++ String.fromFloat h
+                    ]
                     (grid model)
                 ]
 
@@ -70,13 +80,16 @@ classList list =
 
 
 grid : Model -> List (Svg Msg)
-grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
+grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport } =
     let
+        ( screenWidth, screenHeight ) =
+            viewport
+
         cellWidth =
-            1000 / toFloat (Tuple.first spec.dimensions)
+            screenWidth / toFloat (Tuple.first spec.dimensions)
 
         cellHeight =
-            800 / toFloat (Tuple.second spec.dimensions)
+            screenHeight / toFloat (Tuple.second spec.dimensions)
 
         cols =
             List.range 0 (Tuple.first spec.dimensions)
@@ -85,19 +98,24 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
             List.range 0 (Tuple.second spec.dimensions)
 
         ships =
-            [ Ship.ship "700" "100"
-            , Ship.ship "800" "350"
-            , Ship.ship "650" "420"
-            , Ship.ship "850" "550"
-            ]
+            []
 
+        -- ships =
+        --     [ Ship.ship "700" "100"
+        --     , Ship.ship "800" "350"
+        --     , Ship.ship "650" "420"
+        --     , Ship.ship "850" "550"
+        --     , Ship.ship "200" "200"
+        --     , Ship.ship "300" "300"
+        --     , Ship.ship "400" "400"
+        --     ]
         castles =
             spec.castles
                 |> List.map
                     (\(Castle ( x, y )) ->
-                        CastleSvg.castle (CellClicked ( x, y ))
-                            (cellWidth |> String.fromFloat)
-                            (cellHeight |> String.fromFloat)
+                        CastleSvg.castle (CastleSelected (Castle ( x, y )))
+                            (cellWidth * 2 |> String.fromFloat)
+                            (cellHeight * 2 |> String.fromFloat)
                             (toFloat x * cellWidth |> String.fromFloat)
                             (toFloat y * cellHeight |> String.fromFloat)
                     )

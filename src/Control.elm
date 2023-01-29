@@ -1,8 +1,9 @@
 module Control exposing (..)
 
+import Browser.Dom exposing (getViewport)
 import Browser.Events exposing (onKeyDown, onMouseMove)
 import Countdown.Control as Countdown
-import Data exposing (Model, Msg(..), Phase(..), Point, defaultCastle, roundOne)
+import Data exposing (Castle(..), Model, Msg(..), Phase(..), Point, defaultCastle, roundOne)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
 import Json.Decode as D
 import Process
@@ -25,8 +26,12 @@ init =
       , castleSelected = False
       , availableCannon = 3
       , mousePos = Nothing
+      , viewport = ( 0, 0 )
       }
-    , getRandomShape
+    , Cmd.batch
+        [ getRandomShape
+        , Task.perform SetViewport getViewport
+        ]
     )
 
 
@@ -34,22 +39,22 @@ autoEnclose : Int -> Point -> List Point
 autoEnclose padding ( x, y ) =
     let
         xr =
-            List.range (x - padding) (x + padding)
+            List.range (x - padding) (x + padding + 1)
 
         yr =
-            List.range (y - padding) (y + padding)
+            List.range (y - padding) (y + padding + 1)
 
         top =
             List.map (\x_ -> ( x_, y - padding )) xr
 
         bottom =
-            List.map (\x_ -> ( x_, y + padding )) xr
+            List.map (\x_ -> ( x_, y + padding + 1 )) xr
 
         left =
             List.map (\y_ -> ( x - padding, y_ )) yr
 
         right =
-            List.map (\y_ -> ( x + padding, y_ )) yr
+            List.map (\y_ -> ( x + padding + 1, y_ )) yr
 
         all =
             top ++ right ++ List.reverse bottom ++ List.reverse left
@@ -60,6 +65,9 @@ autoEnclose padding ( x, y ) =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        SetViewport { viewport } ->
+            ( { model | viewport = ( viewport.width, viewport.height ) }, Cmd.none )
+
         MouseMove p ->
             ( { model | mousePos = Just p }, Cmd.none )
 
@@ -113,7 +121,7 @@ update msg model =
                     ( { model
                         | phase = Placing
                         , countdown = countdown
-                        , availableCannon = model.availableCannon + 1 + Set.size enclosed
+                        , availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
                       }
                     , Cmd.map CountdownMsg countdownCmd
                     )
@@ -139,13 +147,13 @@ update msg model =
                     in
                     ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
+        CastleSelected (Castle cell) ->
+            selectCastle (Debug.log "cell" cell) model
+
         CellClicked cell ->
             case model.phase of
                 Placing ->
                     placeCannon cell model
-
-                CastleSelection ->
-                    selectCastle cell model
 
                 Building ->
                     case model.currentShape of
