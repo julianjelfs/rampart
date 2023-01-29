@@ -5,7 +5,7 @@ import Data exposing (Model, Msg(..), Phase(..), Point)
 import Graphics.Cannon as Cannon
 import Graphics.Castle as Castle
 import Html exposing (Html, button, div)
-import Matrix exposing (Matrix)
+import Html.Attributes as H exposing (style)
 import Set exposing (Set)
 import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractPoint)
 import Svg exposing (Attribute, Svg, rect, svg, text)
@@ -21,7 +21,18 @@ view model =
 
         _ ->
             div []
-                [ Html.map CountdownMsg (Countdown.view model.countdown)
+                [ case ( model.phase, model.mousePos ) of
+                    ( Placing, Just ( left, top ) ) ->
+                        div
+                            [ H.style "left" (String.fromInt (left + 10) ++ "px")
+                            , H.style "top" (String.fromInt top ++ "px")
+                            , class "cannon-count"
+                            ]
+                            [ text <| String.fromInt model.availableCannon ]
+
+                    _ ->
+                        text ""
+                , Html.map CountdownMsg (Countdown.view model.countdown)
                 , svg [ preserveAspectRatio "none", class "root", width "100%", height "100%", viewBox "0 0 1000 800" ]
                     (grid model)
                 ]
@@ -42,8 +53,8 @@ floatToPixelString f =
     String.fromFloat f ++ "px"
 
 
-isCellShadowed : Set Point -> Set Point -> Set Point -> Point -> Point -> Shape -> Bool
-isCellShadowed walls cannon castles cell overCell currentShape =
+isCellShadowed : Point -> Point -> Shape -> Bool
+isCellShadowed cell overCell currentShape =
     isAdjacent cell overCell
         && overlapsShape (subtractPoint cell overCell) currentShape
 
@@ -118,7 +129,7 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell } =
                             else
                                 Maybe.map2
                                     (\shape over ->
-                                        isCellShadowed walls cannon spec.castles ( c, r ) over shape
+                                        isCellShadowed ( c, r ) over shape
                                     )
                                     currentShape
                                     overCell

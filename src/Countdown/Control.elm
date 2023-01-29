@@ -1,6 +1,8 @@
 module Countdown.Control exposing (..)
 
 import Countdown.Data exposing (Model(..), Msg(..))
+import Process
+import Task
 import Time exposing (Posix)
 
 
@@ -9,9 +11,11 @@ init =
     Idle
 
 
-start : String -> Int -> Model
+start : String -> Int -> ( Model, Cmd Msg )
 start label time =
-    CountingDown label time
+    ( Intro label time
+    , Task.perform (\_ -> FinishIntro) (Process.sleep 5000)
+    )
 
 
 update : Msg -> Model -> ( Model, Bool )
@@ -20,12 +24,25 @@ update msg model =
         ( Idle, _ ) ->
             ( model, True )
 
-        ( CountingDown l n, Tick _ ) ->
-            if n > 0 then
-                ( CountingDown l (n - 1), False )
+        ( Intro l n, msg_ ) ->
+            case msg_ of
+                FinishIntro ->
+                    ( CountingDown l n, False )
 
-            else
-                ( Idle, True )
+                _ ->
+                    ( Intro l n, False )
+
+        ( CountingDown l n, msg_ ) ->
+            case msg_ of
+                Tick _ ->
+                    if n > 0 then
+                        ( CountingDown l (n - 1), False )
+
+                    else
+                        ( Idle, True )
+
+                _ ->
+                    ( CountingDown l n, False )
 
 
 subscriptions : Model -> Sub Msg
@@ -34,5 +51,8 @@ subscriptions model =
         Idle ->
             Sub.none
 
-        CountingDown _ _ ->
+        Intro _ _ ->
+            Sub.none
+
+        _ ->
             Time.every 1000 Tick

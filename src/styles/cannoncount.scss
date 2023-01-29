@@ -1,0 +1,13 @@
+.cannon-count {
+  position: absolute;
+  display: grid;
+  align-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  z-index: 1;
+  padding: 10px 20px;
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 10px 10px 0 #000000;
+  border-radius: 10px;
+}

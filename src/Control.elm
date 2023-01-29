@@ -23,6 +23,8 @@ init =
       , phase = Start
       , countdown = Countdown.init
       , base = Nothing
+      , availableCannon = 3
+      , mousePos = Nothing
       }
     , getRandomShape
     )
@@ -58,14 +60,25 @@ autoEnclose padding ( x, y ) =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        MouseMove p ->
+            ( { model | mousePos = Just p }, Cmd.none )
+
         SelectBase p ->
             ( { model | base = Just p }, Cmd.none )
 
         StartGame ->
-            ( { model | phase = CastleSelection, countdown = Countdown.start "Select your starting castle" 10 }, Cmd.none )
+            let
+                ( countdown, countdownCmd ) =
+                    Countdown.start "Select your starting castle" 10
+            in
+            ( { model | phase = CastleSelection, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
         StartCountdown l n ->
-            ( { model | countdown = Countdown.start l n }, Cmd.none )
+            let
+                ( countdown, countdownCmd ) =
+                    Countdown.start l n
+            in
+            ( { model | countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
         CountdownMsg subMsg ->
             let
@@ -74,10 +87,18 @@ update msg model =
             in
             case ( model.phase, finished ) of
                 ( CastleSelection, True ) ->
-                    ( { model | phase = Placing, countdown = Countdown.start "Place your cannons!" 20 }, Cmd.none )
+                    let
+                        ( countdown, countdownCmd ) =
+                            Countdown.start "Place your cannons!" 20
+                    in
+                    ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
                 ( Placing, True ) ->
-                    ( { model | phase = Battling, countdown = Countdown.start "Commence battle" 20 }, Cmd.none )
+                    let
+                        ( countdown, countdownCmd ) =
+                            Countdown.start "Commence battle" 20
+                    in
+                    ( { model | phase = Battling, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
                 _ ->
                     ( { model | countdown = subModel }, Cmd.none )
@@ -94,7 +115,11 @@ update msg model =
                     )
 
                 _ ->
-                    ( model, Cmd.none )
+                    let
+                        ( countdown, countdownCmd ) =
+                            Countdown.start "Place your cannons!" 20
+                    in
+                    ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
         CellClicked cell ->
             case model.phase of
@@ -184,8 +209,26 @@ selectCastle cell model =
 
 placeCannon : Point -> Model -> ( Model, Cmd Msg )
 placeCannon cell model =
-    if Set.member cell model.buildable then
-        ( { model | cannon = Set.insert cell model.cannon }, Cmd.none )
+    let
+        remaining =
+            model.availableCannon - 1
+
+        phase =
+            if remaining == 0 then
+                Battling
+
+            else
+                model.phase
+
+        ( countdown, countdownCmd ) =
+            if remaining == 0 then
+                Countdown.start "Commence battle" 20
+
+            else
+                ( model.countdown, Cmd.none )
+    in
+    if Set.member cell model.buildable && model.availableCannon > 0 then
+        ( { model | cannon = Set.insert cell model.cannon, availableCannon = remaining, phase = phase, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
     else
         ( model, Cmd.none )
@@ -196,9 +239,17 @@ subscriptions model =
     let
         countdown =
             Sub.map CountdownMsg (Countdown.subscriptions model.countdown)
+
+        mousePos =
+            if model.phase == Placing then
+                onMouseMove (D.map MouseMove mousePosDecoder)
+
+            else
+                Sub.none
     in
     Sub.batch
         [ countdown
+        , mousePos
         , case model.currentShape of
             Nothing ->
                 Sub.none
@@ -211,3 +262,8 @@ subscriptions model =
 keyDecoder : D.Decoder Int
 keyDecoder =
     D.field "keyCode" D.int
+
+
+mousePosDecoder : D.Decoder ( Int, Int )
+mousePosDecoder =
+    D.map2 Tuple.pair (D.field "clientX" D.int) (D.field "clientY" D.int)

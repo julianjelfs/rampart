@@ -16,7 +16,25 @@
   box-shadow: 10px 10px 0 #000000;
   border-radius: 10px;
 
+  &__intro {
+    width: calc(100% - 100px);
+    max-height: 100px;
+    animation: toBottom 5s ease-in-out;
+    right: unset;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   &__time {
     font-size: 42px;
+  }
+}
+
+@keyframes toBottom {
+  from {
+    transform: translateY(0) translateX(-50%);
+  }
+  to {
+    transform: translateY(100vh) translateX(-50%);
   }
 }

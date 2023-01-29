@@ -39,12 +39,14 @@ type alias Model =
     { spec : Spec
     , walls : Set Point
     , cannon : Set Point
+    , availableCannon : Int
     , buildable : Set Point
     , currentShape : Maybe (Matrix Int)
     , overCell : Maybe Point
     , phase : Phase
     , countdown : Countdown.Model
     , base : Maybe Point
+    , mousePos : Maybe ( Int, Int )
     }
 
 
@@ -52,6 +54,7 @@ type Msg
     = CellClicked Point
     | NextShape (Matrix Int)
     | KeyDown Int
+    | MouseMove ( Int, Int )
     | MouseOver Point
     | MouseOut
     | StartCountdown String Int
