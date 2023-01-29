@@ -100,3 +100,4 @@ type Msg
     | StartGame
     | BuildWall (List Point)
     | SetViewport Viewport
+    | AddShip ( Float, Float )

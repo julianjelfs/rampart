@@ -65,6 +65,9 @@ autoEnclose padding ( x, y ) =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        AddShip ship ->
+            ( model, Cmd.none )
+
         SetViewport { viewport } ->
             ( { model | viewport = ( viewport.width, viewport.height ) }, Cmd.none )
 
@@ -280,7 +283,7 @@ subscriptions model =
             Nothing ->
                 Sub.none
 
-            Just shape ->
+            Just _ ->
                 onKeyDown (D.map KeyDown keyDecoder)
         ]
 

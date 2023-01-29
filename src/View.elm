@@ -98,17 +98,12 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport }
             List.range 0 (Tuple.second spec.dimensions)
 
         ships =
-            []
+            [ Ship.ship "700" "100"
+            , Ship.ship "800" "350"
+            , Ship.ship "650" "420"
+            , Ship.ship "850" "550"
+            ]
 
-        -- ships =
-        --     [ Ship.ship "700" "100"
-        --     , Ship.ship "800" "350"
-        --     , Ship.ship "650" "420"
-        --     , Ship.ship "850" "550"
-        --     , Ship.ship "200" "200"
-        --     , Ship.ship "300" "300"
-        --     , Ship.ship "400" "400"
-        --     ]
         castles =
             spec.castles
                 |> List.map
