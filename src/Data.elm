@@ -4,7 +4,7 @@ import Browser.Dom exposing (Viewport)
 import Countdown.Data as Countdown
 import Matrix exposing (Matrix)
 import Set exposing (Set)
-import TestData exposing (enclosed)
+import Ship exposing (Ship)
 
 
 type Castle
@@ -85,6 +85,7 @@ type alias Model =
     , castleSelected : Bool
     , mousePos : Maybe ( Int, Int )
     , viewport : ( Float, Float )
+    , ships : List Ship
     }
 
 
@@ -100,4 +101,5 @@ type Msg
     | StartGame
     | BuildWall (List Point)
     | SetViewport Viewport
-    | AddShip ( Float, Float )
+    | AddShip Ship
+    | Frame Float

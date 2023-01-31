@@ -1,7 +1,7 @@
 module Control exposing (..)
 
 import Browser.Dom exposing (getViewport)
-import Browser.Events exposing (onKeyDown, onMouseMove)
+import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onMouseMove)
 import Countdown.Control as Countdown
 import Data exposing (Castle(..), Model, Msg(..), Phase(..), Point, defaultCastle, roundOne)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
@@ -9,6 +9,7 @@ import Json.Decode as D
 import Process
 import Set exposing (Set)
 import Shapes exposing (cellsOccupiedByShape, getRandomShape, rotate90)
+import Ship
 import Task
 import TestData exposing (enclosed)
 
@@ -27,6 +28,7 @@ init =
       , availableCannon = 3
       , mousePos = Nothing
       , viewport = ( 0, 0 )
+      , ships = []
       }
     , Cmd.batch
         [ getRandomShape
@@ -65,8 +67,21 @@ autoEnclose padding ( x, y ) =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Frame delta ->
+            ( { model | ships = Ship.moveShips model.viewport delta model.ships }, Cmd.none )
+
         AddShip ship ->
-            ( model, Cmd.none )
+            let
+                ships =
+                    ship :: model.ships
+            in
+            ( { model | ships = ships }
+            , if List.length ships < model.spec.ships then
+                Ship.getRandomShip model.viewport AddShip
+
+              else
+                Cmd.none
+            )
 
         SetViewport { viewport } ->
             ( { model | viewport = ( viewport.width, viewport.height ) }, Cmd.none )
@@ -102,8 +117,20 @@ update msg model =
                     let
                         ( countdown, countdownCmd ) =
                             Countdown.prepareForBattle
+
+                        shipCmd =
+                            if List.length model.ships < model.spec.ships then
+                                Ship.getRandomShip model.viewport AddShip
+
+                            else
+                                Cmd.none
                     in
-                    ( { model | phase = Battling, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                    ( { model | phase = Battling, countdown = countdown }
+                    , Cmd.batch
+                        [ Cmd.map CountdownMsg countdownCmd
+                        , shipCmd
+                        ]
+                    )
 
                 ( Battling, True ) ->
                     let
@@ -242,22 +269,20 @@ placeCannon cell model =
         remaining =
             model.availableCannon - 1
 
-        phase =
+        countdownCmd =
             if remaining == 0 then
-                Battling
+                Countdown.stop
 
             else
-                model.phase
-
-        ( countdown, countdownCmd ) =
-            if remaining == 0 then
-                Countdown.prepareForBattle
-
-            else
-                ( model.countdown, Cmd.none )
+                Cmd.none
     in
     if Set.member cell model.buildable && model.availableCannon > 0 then
-        ( { model | cannon = Set.insert cell model.cannon, availableCannon = remaining, phase = phase, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+        ( { model
+            | cannon = Set.insert cell model.cannon
+            , availableCannon = remaining
+          }
+        , Cmd.map CountdownMsg countdownCmd
+        )
 
     else
         ( model, Cmd.none )
@@ -275,10 +300,18 @@ subscriptions model =
 
             else
                 Sub.none
+
+        frameSub =
+            if model.phase == Battling then
+                onAnimationFrameDelta Frame
+
+            else
+                Sub.none
     in
     Sub.batch
         [ countdown
         , mousePos
+        , frameSub
         , case model.currentShape of
             Nothing ->
                 Sub.none

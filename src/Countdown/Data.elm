@@ -12,3 +12,4 @@ type Model
 type Msg
     = Tick Posix
     | FinishIntro
+    | Stop

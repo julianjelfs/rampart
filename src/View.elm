@@ -9,6 +9,7 @@ import Html exposing (Html, button, div)
 import Html.Attributes as H exposing (style)
 import Set exposing (Set)
 import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractPoint)
+import Ship
 import Svg exposing (Attribute, Svg, rect, svg, text)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick, onMouseOut, onMouseOver)
@@ -80,7 +81,7 @@ classList list =
 
 
 grid : Model -> List (Svg Msg)
-grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport } =
+grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, ships } =
     let
         ( screenWidth, screenHeight ) =
             viewport
@@ -97,13 +98,6 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport }
         rows =
             List.range 0 (Tuple.second spec.dimensions)
 
-        ships =
-            [ Ship.ship "700" "100"
-            , Ship.ship "800" "350"
-            , Ship.ship "650" "420"
-            , Ship.ship "850" "550"
-            ]
-
         castles =
             spec.castles
                 |> List.map
@@ -113,6 +107,13 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport }
                             (cellHeight * 2 |> String.fromFloat)
                             (toFloat x * cellWidth |> String.fromFloat)
                             (toFloat y * cellHeight |> String.fromFloat)
+                    )
+
+        ships_ =
+            ships
+                |> List.map
+                    (\ship ->
+                        Ship.ship (Ship.shipAngle ship.vector) (Tuple.first ship.pos |> String.fromFloat) (Tuple.second ship.pos |> String.fromFloat)
                     )
 
         cannons =
@@ -179,4 +180,4 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport }
         rows
         ++ castles
         ++ cannons
-        ++ ships
+        ++ ships_

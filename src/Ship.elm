@@ -1,22 +1,83 @@
 module Ship exposing (..)
 
-import Browser.Dom exposing (ViewPort)
-import Data exposing (Msg(..), Point)
 import Random exposing (Generator)
 
 
-
--- a ship needs to be more than just some coordinates
--- needs a vector and a velocity
--- a type (regular or fire)
--- a damage level
+type ShipType
+    = NormalShip
+    | FireShip
 
 
-getRandomShip : ViewPort -> Cmd Msg
-getRandomShip viewport =
-    Random.generate AddShip (randomShipGenerator viewport)
+type alias Ship =
+    { damage : Float
+    , pos : ( Float, Float )
+    , shipType : ShipType
+    , vector : ( Float, Float )
+    , velocity : Float
+    }
 
 
-randomShipGenerator : ViewPort -> Generator ( Float, Float )
-randomShipGenerator { viewport } =
-    Random.pair (Random.float 0 viewport.width) (Random.float 0 viewport.height)
+shipAngle : ( Float, Float ) -> Float
+shipAngle ( x, y ) =
+    atan2 y x |> radiansToDegrees
+
+
+radiansToDegrees : Float -> Float
+radiansToDegrees rad =
+    rad * (180 / pi)
+
+
+moveShips : ( Float, Float ) -> Float -> List Ship -> List Ship
+moveShips vp delta =
+    List.map (moveShip vp delta)
+
+
+moveShip : ( Float, Float ) -> Float -> Ship -> Ship
+moveShip ( width, height ) delta ship =
+    let
+        { pos, vector, velocity } =
+            ship
+
+        ( x, y ) =
+            pos
+
+        ( vx, vy ) =
+            vector
+
+        x_ =
+            x + delta * vx * velocity |> clamp (width / 2) width
+
+        y_ =
+            y + delta * vy * velocity |> clamp 0 height
+    in
+    { ship | pos = ( x_, y_ ) }
+
+
+getRandomShip : ( Float, Float ) -> (Ship -> msg) -> Cmd msg
+getRandomShip viewport msg =
+    Random.generate msg (randomShipGenerator viewport)
+
+
+randomShipGenerator : ( Float, Float ) -> Generator Ship
+randomShipGenerator vp =
+    Random.map4 (Ship 0) (positionGenerator vp) shipTypeGenerator vectorGenerator velocityGenerator
+
+
+positionGenerator : ( Float, Float ) -> Generator ( Float, Float )
+positionGenerator ( width, height ) =
+    Random.pair (Random.float (width * 0.75) width) (Random.float 0 height)
+
+
+shipTypeGenerator : Generator ShipType
+shipTypeGenerator =
+    Random.weighted ( 10, FireShip ) [ ( 90, NormalShip ) ]
+
+
+vectorGenerator : Generator ( Float, Float )
+vectorGenerator =
+    Random.pair (Random.float -1 0) (Random.float -1 1)
+
+
+velocityGenerator : Generator Float
+velocityGenerator =
+    Random.float 0.05 0.1

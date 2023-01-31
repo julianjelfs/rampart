@@ -1,22 +1,34 @@
 module Graphics.Ship exposing (ship)
 
+import Html.Attributes exposing (style)
 import Svg exposing (..)
 import Svg.Attributes as SA exposing (..)
 
 
-ship x_ y_ =
+ship angle x_ y_ =
     svg
         [ viewBox "0 0 100 50"
         , x x_
         , y y_
-        , width "100"
-        , height "50"
+        , class "ship"
+        , width "80"
+        , height "40"
         ]
-        [ Svg.path
-            [ fill "#6f3e1c"
-            , stroke "#000000"
-            , strokeWidth "3"
-            , d "M36.353 5h38.141C85.764 5 95 14.651 95 21.894v4.87C95 34.007 87.665 45 74.117 45H36.976C24.556 44.368 8.21 37.605 5 26.416v-4.477C6.458 12.093 23.516 6.356 36.353 5Z"
+        [ g
+            [ SA.style <| "transform-origin: 50% 50%; transform:" ++ "rotate(" ++ String.fromFloat (angle - 180) ++ "deg)"
             ]
-            []
+            [ Svg.path
+                [ fill "#6e4630"
+                , stroke "#000"
+                , strokeWidth "3"
+                , d "M2.058 24.905 24.056 1.352h74.255V49H24.155L2.058 24.905Z"
+                ]
+                []
+            , Svg.path
+                [ fill "#d8d8d8"
+                , stroke "#000"
+                , d "m31.214 8.172.175 31.816M43.214 8.172l.175 31.816M54.214 8.172l.175 31.816M65.214 8.172l.175 31.816M76.214 8.172l.175 31.816M87.214 8.172l.175 31.816"
+                ]
+                []
+            ]
         ]

@@ -11,6 +11,11 @@ init =
     Idle
 
 
+stop : Cmd Msg
+stop =
+    Task.perform (\_ -> Stop) (Task.succeed ())
+
+
 placeCannon : ( Model, Cmd Msg )
 placeCannon =
     start "Place your cannons" "Position inside fort walls" 10
@@ -54,6 +59,9 @@ update msg model =
 
         ( CountingDown l n, msg_ ) ->
             case msg_ of
+                Stop ->
+                    ( Idle, True )
+
                 Tick _ ->
                     if n > 0 then
                         ( CountingDown l (n - 1), False )
