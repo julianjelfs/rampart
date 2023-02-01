@@ -5,6 +5,7 @@ import Countdown.Data as Countdown
 import Matrix exposing (Matrix)
 import Set exposing (Set)
 import Ship exposing (Ship)
+import Time exposing (Posix)
 
 
 type Castle
@@ -86,6 +87,7 @@ type alias Model =
     , mousePos : Maybe ( Int, Int )
     , viewport : ( Float, Float )
     , ships : List Ship
+    , lastFrame : Maybe Int
     }
 
 
@@ -102,4 +104,4 @@ type Msg
     | BuildWall (List Point)
     | SetViewport Viewport
     | AddShip Ship
-    | Frame Float
+    | Frame Int

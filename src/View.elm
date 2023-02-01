@@ -113,7 +113,7 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
             ships
                 |> List.map
                     (\ship ->
-                        Ship.ship (Ship.shipAngle ship.vector) (Tuple.first ship.pos |> String.fromFloat) (Tuple.second ship.pos |> String.fromFloat)
+                        Ship.ship ship.shipType (Ship.shipAngle ship.vector) (Tuple.first ship.pos |> String.fromFloat) (Tuple.second ship.pos |> String.fromFloat)
                     )
 
         cannons =

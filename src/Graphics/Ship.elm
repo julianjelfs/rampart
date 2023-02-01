@@ -1,11 +1,12 @@
 module Graphics.Ship exposing (ship)
 
 import Html.Attributes exposing (style)
+import Ship exposing (ShipType(..))
 import Svg exposing (..)
-import Svg.Attributes as SA exposing (..)
+import Svg.Attributes exposing (..)
 
 
-ship angle x_ y_ =
+ship shipType angle x_ y_ =
     let
         a =
             if angle /= 0 then
@@ -13,6 +14,14 @@ ship angle x_ y_ =
 
             else
                 angle
+
+        color =
+            case shipType of
+                NormalShip ->
+                    "#6e4630"
+
+                FireShip ->
+                    "red"
     in
     svg
         [ viewBox "0 0 120 120"
@@ -25,7 +34,7 @@ ship angle x_ y_ =
         [ g
             [ stroke "#000000", transform <| "rotate(" ++ String.fromFloat a ++ ", 60, 60)" ]
             [ Svg.path
-                [ fill "#6e4630"
+                [ fill color
                 , strokeWidth "3"
                 , d "m8.569 58.908 22-23.551 74.255.006-.003 47.648-74.157-.006L8.57 58.908Z"
                 ]

@@ -1,7 +1,7 @@
 module Control exposing (..)
 
 import Browser.Dom exposing (getViewport)
-import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onMouseMove)
+import Browser.Events exposing (onAnimationFrame, onAnimationFrameDelta, onKeyDown, onMouseMove)
 import Countdown.Control as Countdown
 import Data exposing (Castle(..), Model, Msg(..), Phase(..), Point, defaultCastle, roundOne)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
@@ -12,6 +12,7 @@ import Shapes exposing (cellsOccupiedByShape, getRandomShape, rotate90)
 import Ship
 import Task
 import TestData exposing (enclosed)
+import Time exposing (millisToPosix, posixToMillis)
 
 
 init : ( Model, Cmd Msg )
@@ -29,6 +30,7 @@ init =
       , mousePos = Nothing
       , viewport = ( 0, 0 )
       , ships = []
+      , lastFrame = Nothing
       }
     , Cmd.batch
         [ getRandomShape
@@ -64,11 +66,40 @@ autoEnclose padding ( x, y ) =
     all
 
 
+delta : Maybe Int -> Int -> Int
+delta last next =
+    case last of
+        Nothing ->
+            0
+
+        Just l ->
+            next - l
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Frame delta ->
-            ( { model | ships = Ship.moveShips model.viewport delta model.ships }, Cmd.none )
+        Frame time ->
+            let
+                -- each frame we want to move all the ships
+                -- for each ship check when they last fired a cannonball
+                -- if due, spawn a new cannonball for the ship, select a target and fire
+                -- each ship can fire once a second
+                d =
+                    delta model.lastFrame time
+
+                ships =
+                    Ship.moveShips model.viewport d model.ships
+
+                -- balls =
+                --     Ship.spawnCannonballs time ships model.walls
+            in
+            ( { model
+                | ships = ships
+                , lastFrame = Just time
+              }
+            , Cmd.none
+            )
 
         AddShip ship ->
             let
@@ -303,7 +334,7 @@ subscriptions model =
 
         frameSub =
             if model.phase == Battling then
-                onAnimationFrameDelta Frame
+                onAnimationFrame (posixToMillis >> Frame)
 
             else
                 Sub.none
