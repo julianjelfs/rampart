@@ -6,28 +6,33 @@ import Svg.Attributes as SA exposing (..)
 
 
 ship angle x_ y_ =
+    let
+        a =
+            if angle /= 0 then
+                angle - 180
+
+            else
+                angle
+    in
     svg
-        [ viewBox "0 0 100 50"
+        [ viewBox "0 0 120 120"
         , x x_
         , y y_
         , class "ship"
-        , width "80"
-        , height "40"
+        , width "120"
+        , height "120"
         ]
         [ g
-            [ SA.style <| "transform-origin: 50% 50%; transform:" ++ "rotate(" ++ String.fromFloat (angle - 180) ++ "deg)"
-            ]
+            [ stroke "#000000", transform <| "rotate(" ++ String.fromFloat a ++ ", 60, 60)" ]
             [ Svg.path
                 [ fill "#6e4630"
-                , stroke "#000"
                 , strokeWidth "3"
-                , d "M2.058 24.905 24.056 1.352h74.255V49H24.155L2.058 24.905Z"
+                , d "m8.569 58.908 22-23.551 74.255.006-.003 47.648-74.157-.006L8.57 58.908Z"
                 ]
                 []
             , Svg.path
                 [ fill "#d8d8d8"
-                , stroke "#000"
-                , d "m31.214 8.172.175 31.816M43.214 8.172l.175 31.816M54.214 8.172l.175 31.816M65.214 8.172l.175 31.816M76.214 8.172l.175 31.816M87.214 8.172l.175 31.816"
+                , d "m37.726 42.177.173 31.817m11.827-31.816.173 31.817M60.727 42.18l.172 31.815M71.727 42.18l.172 31.816M82.727 42.18l.172 31.817m10.828-31.815.172 31.816"
                 ]
                 []
             ]

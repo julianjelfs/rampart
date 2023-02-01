@@ -75,9 +75,11 @@ shipTypeGenerator =
 
 vectorGenerator : Generator ( Float, Float )
 vectorGenerator =
-    Random.pair (Random.float -1 0) (Random.float -1 1)
+    Random.pair
+        (Random.weighted ( 50, -1 ) [ ( 50, 0 ) ])
+        (Random.weighted ( 33, -1 ) [ ( 33, 0 ), ( 33, 1 ) ])
 
 
 velocityGenerator : Generator Float
 velocityGenerator =
-    Random.float 0.05 0.1
+    Random.float 0 0.05
