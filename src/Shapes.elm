@@ -1,8 +1,9 @@
 module Shapes exposing (..)
 
-import Data exposing (Msg(..), Point)
+import Data exposing (Msg(..))
 import List.Extra exposing (getAt)
 import Matrix exposing (Matrix)
+import Point exposing (Point)
 import Random exposing (Generator)
 import Set exposing (Set)
 

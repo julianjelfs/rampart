@@ -1,6 +1,7 @@
 module FloodFill exposing (..)
 
-import Data exposing (Point, Spec)
+import Data exposing (Spec)
+import Point exposing (Point)
 import Set exposing (Set)
 
 

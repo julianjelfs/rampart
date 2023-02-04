@@ -1,12 +1,13 @@
 module View exposing (..)
 
 import Countdown.View as Countdown
-import Data exposing (Castle(..), Model, Msg(..), Phase(..), Point)
+import Data exposing (Castle(..), Model, Msg(..), Phase(..))
 import Graphics.Cannon as Cannon
 import Graphics.Castle as CastleSvg
 import Graphics.Ship as Ship
 import Html exposing (Html, button, div)
 import Html.Attributes as H exposing (style)
+import Point exposing (Point)
 import Set exposing (Set)
 import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractPoint)
 import Ship

@@ -1,8 +1,16 @@
 module Ship exposing (..)
 
-import Cannonball exposing (Cannonball)
+import Cannonball exposing (Cannonball, createCannonball)
+import List.Extra as List
+import Point exposing (Pixel, Point)
 import Random exposing (Generator)
+import Random.Set as Random exposing (sample)
 import Set exposing (Set)
+
+
+cannonballThroughput : Int
+cannonballThroughput =
+    2000
 
 
 type ShipType
@@ -12,38 +20,15 @@ type ShipType
 
 type alias Ship =
     { damage : Float
-    , lastFired : Int
-    , pos : ( Float, Float )
+    , cannonball : Maybe Cannonball
+    , pos : Pixel
     , shipType : ShipType
     , vector : ( Float, Float )
     , velocity : Float
     }
 
 
-
--- this is getting messy
--- let's try thinking in terms of things that need to happen on each tick
--- of the event loop
--- Each tick we will call a fn : Time -> Model -> (Model, Cmd)
--- move each ship
--- move all cannonballs towards target
--- check for collisions
--- record damage
--- destroy things if necessary
--- spawnCannonballs : (List Cannonball -> msg) -> Int -> List Ship -> Set Point -> Cmd msg
--- spawnCannonballs msg time ships walls =
---     List.foldr
---         (\ship balls ->
---             if time - ship.lastFired > 1000 then
---                 []
---             else
---                 []
---         )
---         []
---         ships
-
-
-shipAngle : ( Float, Float ) -> Float
+shipAngle : Pixel -> Float
 shipAngle ( x, y ) =
     atan2 y x |> radiansToDegrees
 
@@ -53,12 +38,47 @@ radiansToDegrees rad =
     rad * (180 / pi)
 
 
-moveShips : ( Float, Float ) -> Int -> List Ship -> List Ship
-moveShips vp delta =
-    List.map (moveShip vp delta)
+setShipTargets : List Ship -> List Point -> List Ship
+setShipTargets ships targets =
+    List.filter (\ship -> ship.cannonball == Nothing) ships
+        |> List.foldr
+            (\s ( ships_, targets_ ) ->
+                case targets_ of
+                    [] ->
+                        ( ships_, targets_ )
+
+                    head :: rest ->
+                        ( { s | cannonball = Just <| createCannonball s.pos head } :: ships_, rest )
+            )
+            ( [], targets )
+        |> Tuple.first
 
 
-moveShip : ( Float, Float ) -> Int -> Ship -> Ship
+getShipTargets : List Ship -> Set Point -> (List Point -> msg) -> Cmd msg
+getShipTargets ships walls msg =
+    case List.filter (\ship -> ship.cannonball == Nothing) ships of
+        [] ->
+            Cmd.none
+
+        xs ->
+            getTargets walls msg (List.length xs)
+
+
+moveCannonballs : Set Point -> List Ship -> List Ship
+moveCannonballs walls ships =
+    ships
+
+
+moveShips : Pixel -> Float -> List Ship -> List Ship
+moveShips vp delta ships =
+    let
+        moved =
+            List.map (moveShip vp delta) ships
+    in
+    moved
+
+
+moveShip : Pixel -> Float -> Ship -> Ship
 moveShip ( width, height ) delta ship =
     let
         maxHeight =
@@ -83,10 +103,10 @@ moveShip ( width, height ) delta ship =
             vector
 
         x_ =
-            x + toFloat delta * vx * velocity
+            x + delta * vx * velocity
 
         y_ =
-            y + toFloat delta * vy * velocity
+            y + delta * vy * velocity
 
         v =
             if x_ > maxWidth || x_ < minWidth || y_ > maxHeight || y_ < minHeight then
@@ -98,17 +118,33 @@ moveShip ( width, height ) delta ship =
     { ship | pos = ( clamp minWidth maxWidth x_, clamp minHeight maxHeight y_ ), velocity = v }
 
 
-getRandomShip : ( Float, Float ) -> (Ship -> msg) -> Cmd msg
+getTargets : Set Point -> (List Point -> msg) -> Int -> Cmd msg
+getTargets walls msg n =
+    Random.generate msg (targetsGenerator n walls)
+
+
+targetsGenerator : Int -> Set Point -> Generator (List Point)
+targetsGenerator n walls =
+    Random.list n (targetGenerator walls)
+
+
+targetGenerator : Set Point -> Generator Point
+targetGenerator walls =
+    Random.sample walls
+        |> Random.map (Maybe.withDefault ( 0, 0 ))
+
+
+getRandomShip : Pixel -> (Ship -> msg) -> Cmd msg
 getRandomShip viewport msg =
     Random.generate msg (randomShipGenerator viewport)
 
 
-randomShipGenerator : ( Float, Float ) -> Generator Ship
+randomShipGenerator : Pixel -> Generator Ship
 randomShipGenerator vp =
-    Random.map4 (Ship 0 0) (positionGenerator vp) shipTypeGenerator vectorGenerator velocityGenerator
+    Random.map4 (Ship 0 Nothing) (positionGenerator vp) shipTypeGenerator vectorGenerator velocityGenerator
 
 
-positionGenerator : ( Float, Float ) -> Generator ( Float, Float )
+positionGenerator : Pixel -> Generator Pixel
 positionGenerator ( width, height ) =
     Random.pair (Random.float (width * 0.75) width) (Random.float 0 height)
 
@@ -118,7 +154,7 @@ shipTypeGenerator =
     Random.weighted ( 10, FireShip ) [ ( 90, NormalShip ) ]
 
 
-vectorGenerator : Generator ( Float, Float )
+vectorGenerator : Generator Pixel
 vectorGenerator =
     Random.pair
         (Random.weighted ( 60, -1 ) [ ( 40, 0 ) ])

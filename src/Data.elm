@@ -3,6 +3,7 @@ module Data exposing (..)
 import Browser.Dom exposing (Viewport)
 import Countdown.Data as Countdown
 import Matrix exposing (Matrix)
+import Point exposing (Pixel, Point)
 import Set exposing (Set)
 import Ship exposing (Ship)
 import Time exposing (Posix)
@@ -61,10 +62,6 @@ defaultCastle =
     ( 12, 12 )
 
 
-type alias Point =
-    ( Int, Int )
-
-
 type Phase
     = Building
     | Placing
@@ -84,8 +81,8 @@ type alias Model =
     , phase : Phase
     , countdown : Countdown.Model
     , castleSelected : Bool
-    , mousePos : Maybe ( Int, Int )
-    , viewport : ( Float, Float )
+    , mousePos : Maybe Point
+    , viewport : Pixel
     , ships : List Ship
     , lastFrame : Maybe Int
     }
@@ -96,7 +93,7 @@ type Msg
     | CastleSelected Castle
     | NextShape (Matrix Int)
     | KeyDown Int
-    | MouseMove ( Int, Int )
+    | MouseMove Point
     | MouseOver Point
     | MouseOut
     | CountdownMsg Countdown.Msg
@@ -104,4 +101,5 @@ type Msg
     | BuildWall (List Point)
     | SetViewport Viewport
     | AddShip Ship
-    | Frame Int
+    | Frame Float
+    | WallTargets (List Point)
