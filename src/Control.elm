@@ -2,8 +2,10 @@ module Control exposing (..)
 
 import Browser.Dom exposing (getViewport)
 import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onMouseMove)
+import Cannonball
 import Countdown.Control as Countdown
 import Data exposing (Castle(..), Model, Msg(..), Phase(..), defaultCastle, roundOne)
+import Dict exposing (Dict)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
 import Json.Decode as D
 import Position exposing (Cell)
@@ -21,6 +23,7 @@ init =
     ( { spec = roundOne
       , walls = Set.empty
       , cannon = Set.empty
+      , cannonballs = Dict.empty
       , buildable = Set.empty
       , currentShape = Nothing
       , overCell = Nothing
@@ -98,11 +101,25 @@ frame delta model =
 
             else
                 Cmd.none
+
+        myCannonballs =
+            Dict.foldl
+                (\k ball dict ->
+                    case Cannonball.moveCannonball delta ball of
+                        Nothing ->
+                            dict
+
+                        Just b ->
+                            Dict.insert k b dict
+                )
+                Dict.empty
+                model.cannonballs
     in
     ( { model
         | ships = moved
         , walls = walls
         , buildable = buildable
+        , cannonballs = myCannonballs
       }
     , targetCmd
     )
@@ -263,6 +280,34 @@ update msg model =
             case model.phase of
                 Placing ->
                     placeCannon cell model
+
+                Battling ->
+                    let
+                        cannon =
+                            model.cannon
+                                |> Set.toList
+                                |> List.filter (\c -> not <| Dict.member c model.cannonballs)
+                                |> List.head
+                    in
+                    case cannon of
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                        Just cannon_ ->
+                            let
+                                source =
+                                    model.toPixel cannon_
+
+                                target =
+                                    model.toPixel cell
+
+                                cannonball =
+                                    Cannonball.createCannonball Cannonball.Normal source target
+
+                                cannonballs =
+                                    Dict.insert cannon_ cannonball model.cannonballs
+                            in
+                            ( { model | cannonballs = cannonballs }, Cmd.none )
 
                 Building ->
                     case model.currentShape of

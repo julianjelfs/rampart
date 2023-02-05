@@ -1,7 +1,9 @@
 module Data exposing (..)
 
 import Browser.Dom exposing (Viewport)
+import Cannonball exposing (Cannonball)
 import Countdown.Data as Countdown
+import Dict exposing (Dict)
 import Matrix exposing (Matrix)
 import Position exposing (Cell, Pixel)
 import Set exposing (Set)
@@ -74,6 +76,7 @@ type alias Model =
     { spec : Spec
     , walls : Set Cell
     , cannon : Set Cell
+    , cannonballs : Dict Cell Cannonball
     , availableCannon : Int
     , buildable : Set Cell
     , currentShape : Maybe (Matrix Int)

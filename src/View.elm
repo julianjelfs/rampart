@@ -2,6 +2,7 @@ module View exposing (..)
 
 import Countdown.View as Countdown
 import Data exposing (Castle(..), Model, Msg(..), Phase(..))
+import Dict exposing (Dict)
 import Graphics.Cannon as Cannon
 import Graphics.Cannonball as Cannonball
 import Graphics.Castle as CastleSvg
@@ -83,7 +84,7 @@ classList list =
 
 
 grid : Model -> List (Svg Msg)
-grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, ships } =
+grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, ships, cannonballs } =
     let
         ( screenWidth, screenHeight ) =
             viewport
@@ -129,11 +130,13 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
                             (toFloat y * cellHeight |> String.fromFloat)
                     )
 
-        cannonballs =
+        cannonballs_ =
             ships
-                |> List.filterMap
-                    (\ship ->
-                        Maybe.map (\{ pos, ballType } -> Cannonball.cannonball ballType pos) ship.cannonball
+                |> List.filterMap .cannonball
+                |> List.append (Dict.values cannonballs)
+                |> List.map
+                    (\{ pos, ballType } ->
+                        Cannonball.cannonball ballType pos
                     )
     in
     List.concatMap
@@ -190,4 +193,4 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
         ++ castles
         ++ cannons
         ++ ships_
-        ++ cannonballs
+        ++ cannonballs_

@@ -18,11 +18,8 @@ type alias Cannonball =
 
 
 createCannonball : CannonballType -> Pixel -> Pixel -> Cannonball
-createCannonball type_ ( sx, sy ) target =
+createCannonball type_ ( x, y ) target =
     let
-        ( x, y ) =
-            ( sx + 60, sy + 60 )
-
         ( tx, ty ) =
             target
 

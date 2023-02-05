@@ -19,7 +19,7 @@ getRandomShape =
 
 randomShapeGenerator : Generator Shape
 randomShapeGenerator =
-    Random.int 0 10 |> Random.map getShape
+    Random.int 0 (List.length allShapes - 1) |> Random.map getShape
 
 
 getShape : Int -> Shape
@@ -91,6 +91,7 @@ allShapes =
     , lshape
     , lshapeFlipped
     , crossshape
+    , dot
     ]
         |> List.filterMap identity
 
@@ -117,6 +118,15 @@ cornerShape =
         [ [ 0, 0, 0 ]
         , [ 0, 1, 1 ]
         , [ 0, 1, 0 ]
+        ]
+
+
+dot : Maybe Shape
+dot =
+    Matrix.fromLists
+        [ [ 0, 0, 0 ]
+        , [ 0, 1, 0 ]
+        , [ 0, 0, 0 ]
         ]
 
 

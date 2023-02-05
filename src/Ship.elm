@@ -48,6 +48,9 @@ setShipTargets ships targets =
 
                     head :: rest ->
                         let
+                            ( sx, sy ) =
+                                s.pos
+
                             type_ =
                                 case s.shipType of
                                     Fire ->
@@ -56,7 +59,7 @@ setShipTargets ships targets =
                                     Normal ->
                                         Cannonball.Normal
                         in
-                        ( { s | cannonball = Just <| createCannonball type_ s.pos head } :: ships_, rest )
+                        ( { s | cannonball = Just <| createCannonball type_ ( sx + 60, sy + 60 ) head } :: ships_, rest )
             )
             ( [], targets )
         |> Tuple.first
