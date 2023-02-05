@@ -7,6 +7,7 @@ import Graphics.Cannon as Cannon
 import Graphics.Cannonball as Cannonball
 import Graphics.Castle as CastleSvg
 import Graphics.Ship as Ship
+import Graphics.Target as Target
 import Html exposing (Html, button, div)
 import Html.Attributes as H exposing (style)
 import Position exposing (Cell)
@@ -14,7 +15,7 @@ import Set exposing (Set)
 import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractCell)
 import Ship
 import Svg exposing (Attribute, Svg, rect, svg, text)
-import Svg.Attributes exposing (..)
+import Svg.Attributes as SA exposing (..)
 import Svg.Events exposing (onClick, onMouseOut, onMouseOver)
 
 
@@ -130,6 +131,21 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
                             (toFloat y * cellHeight |> String.fromFloat)
                     )
 
+        allCannonballs =
+            ships
+                |> List.filterMap .cannonball
+                |> List.append (Dict.values cannonballs)
+
+        targets =
+            allCannonballs
+                |> List.map
+                    (\c ->
+                        Target.target
+                            cellWidth
+                            cellHeight
+                            c.target
+                    )
+
         cannonballs_ =
             ships
                 |> List.filterMap .cannonball
@@ -194,3 +210,4 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
         ++ cannons
         ++ ships_
         ++ cannonballs_
+        ++ targets

@@ -107,6 +107,8 @@ frame delta model =
                 (\k ball dict ->
                     case Cannonball.moveCannonball delta ball of
                         Nothing ->
+                            -- this ball has reached its destination
+                            -- did it hit its ship
                             dict
 
                         Just b ->
@@ -160,6 +162,10 @@ update msg model =
 
                 toPixel =
                     \( x, y ) ->
+                        let
+                            _ =
+                                Debug.log "stuff" ( cellWidth, cellHeight, ( x, y ) )
+                        in
                         ( toFloat x * cellWidth + cellWidth / 2
                         , toFloat y * cellHeight + cellHeight / 2
                         )
