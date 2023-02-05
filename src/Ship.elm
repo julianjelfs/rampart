@@ -2,20 +2,15 @@ module Ship exposing (..)
 
 import Cannonball exposing (Cannonball, createCannonball)
 import List.Extra as List
-import Point exposing (Pixel, Point)
+import Position exposing (Cell, Pixel)
 import Random exposing (Generator)
 import Random.Set as Random exposing (sample)
 import Set exposing (Set)
 
 
-cannonballThroughput : Int
-cannonballThroughput =
-    2000
-
-
 type ShipType
-    = NormalShip
-    | FireShip
+    = Normal
+    | Fire
 
 
 type alias Ship =
@@ -38,9 +33,13 @@ radiansToDegrees rad =
     rad * (180 / pi)
 
 
-setShipTargets : List Ship -> List Point -> List Ship
+setShipTargets : List Ship -> List Pixel -> List Ship
 setShipTargets ships targets =
-    List.filter (\ship -> ship.cannonball == Nothing) ships
+    let
+        ( firing, empty ) =
+            List.partition (\{ cannonball } -> cannonball /= Nothing) ships
+    in
+    empty
         |> List.foldr
             (\s ( ships_, targets_ ) ->
                 case targets_ of
@@ -48,34 +47,58 @@ setShipTargets ships targets =
                         ( ships_, targets_ )
 
                     head :: rest ->
-                        ( { s | cannonball = Just <| createCannonball s.pos head } :: ships_, rest )
+                        let
+                            type_ =
+                                case s.shipType of
+                                    Fire ->
+                                        Cannonball.Fire
+
+                                    Normal ->
+                                        Cannonball.Normal
+                        in
+                        ( { s | cannonball = Just <| createCannonball type_ s.pos head } :: ships_, rest )
             )
             ( [], targets )
         |> Tuple.first
+        |> List.append firing
 
 
-getShipTargets : List Ship -> Set Point -> (List Point -> msg) -> Cmd msg
-getShipTargets ships walls msg =
+getShipTargets : (Cell -> Pixel) -> List Ship -> Set Cell -> (List Pixel -> msg) -> Cmd msg
+getShipTargets toPixel ships walls msg =
     case List.filter (\ship -> ship.cannonball == Nothing) ships of
         [] ->
             Cmd.none
 
         xs ->
-            getTargets walls msg (List.length xs)
+            getTargets toPixel walls msg (List.length xs)
 
 
-moveCannonballs : Set Point -> List Ship -> List Ship
-moveCannonballs walls ships =
-    ships
+moveCannonball : Float -> Ship -> ( Ship, Maybe Pixel )
+moveCannonball delta ship =
+    case ship.cannonball of
+        Nothing ->
+            ( ship, Nothing )
+
+        Just ball ->
+            let
+                moved =
+                    Cannonball.moveCannonball delta ball
+
+                destroyed =
+                    case moved of
+                        Nothing ->
+                            Just ball.target
+
+                        Just _ ->
+                            Nothing
+            in
+            ( { ship | cannonball = moved }, destroyed )
 
 
-moveShips : Pixel -> Float -> List Ship -> List Ship
+moveShips : Pixel -> Float -> List Ship -> List ( Ship, Maybe Pixel )
 moveShips vp delta ships =
-    let
-        moved =
-            List.map (moveShip vp delta) ships
-    in
-    moved
+    List.map (moveShip vp delta) ships
+        |> List.map (moveCannonball delta)
 
 
 moveShip : Pixel -> Float -> Ship -> Ship
@@ -118,20 +141,21 @@ moveShip ( width, height ) delta ship =
     { ship | pos = ( clamp minWidth maxWidth x_, clamp minHeight maxHeight y_ ), velocity = v }
 
 
-getTargets : Set Point -> (List Point -> msg) -> Int -> Cmd msg
-getTargets walls msg n =
-    Random.generate msg (targetsGenerator n walls)
+getTargets : (Cell -> Pixel) -> Set Cell -> (List Pixel -> msg) -> Int -> Cmd msg
+getTargets toPixel walls msg n =
+    Random.generate msg (targetsGenerator toPixel n walls)
 
 
-targetsGenerator : Int -> Set Point -> Generator (List Point)
-targetsGenerator n walls =
-    Random.list n (targetGenerator walls)
+targetsGenerator : (Cell -> Pixel) -> Int -> Set Cell -> Generator (List Pixel)
+targetsGenerator toPixel n walls =
+    Random.list n (targetGenerator toPixel walls)
 
 
-targetGenerator : Set Point -> Generator Point
-targetGenerator walls =
+targetGenerator : (Cell -> Pixel) -> Set Cell -> Generator Pixel
+targetGenerator toPixel walls =
     Random.sample walls
         |> Random.map (Maybe.withDefault ( 0, 0 ))
+        |> Random.map toPixel
 
 
 getRandomShip : Pixel -> (Ship -> msg) -> Cmd msg
@@ -151,7 +175,7 @@ positionGenerator ( width, height ) =
 
 shipTypeGenerator : Generator ShipType
 shipTypeGenerator =
-    Random.weighted ( 10, FireShip ) [ ( 90, NormalShip ) ]
+    Random.weighted ( 10, Fire ) [ ( 90, Normal ) ]
 
 
 vectorGenerator : Generator Pixel

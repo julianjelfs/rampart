@@ -6,7 +6,7 @@ import Countdown.Control as Countdown
 import Data exposing (Castle(..), Model, Msg(..), Phase(..), defaultCastle, roundOne)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
 import Json.Decode as D
-import Point exposing (Point)
+import Position exposing (Cell)
 import Process
 import Set exposing (Set)
 import Shapes exposing (cellsOccupiedByShape, getRandomShape, rotate90)
@@ -31,7 +31,8 @@ init =
       , mousePos = Nothing
       , viewport = ( 0, 0 )
       , ships = []
-      , lastFrame = Nothing
+      , toPixel = \_ -> ( 0, 0 )
+      , toCell = \_ -> ( 0, 0 )
       }
     , Cmd.batch
         [ getRandomShape
@@ -40,7 +41,7 @@ init =
     )
 
 
-autoEnclose : Int -> Point -> List Point
+autoEnclose : Int -> Cell -> List Cell
 autoEnclose padding ( x, y ) =
     let
         xr =
@@ -70,14 +71,38 @@ autoEnclose padding ( x, y ) =
 frame : Float -> Model -> ( Model, Cmd Msg )
 frame delta model =
     let
-        moved =
+        movedAndDestroyed =
             Ship.moveShips model.viewport delta model.ships
 
+        moved =
+            List.map Tuple.first movedAndDestroyed
+
+        destroyed =
+            List.filterMap Tuple.second movedAndDestroyed
+                |> List.map model.toCell
+                |> Set.fromList
+
+        walls =
+            Set.diff model.walls destroyed
+
+        buildable =
+            if Set.size destroyed > 0 then
+                findBuildableCells model.spec walls model.cannon
+
+            else
+                model.buildable
+
         targetCmd =
-            Ship.getShipTargets moved model.walls WallTargets
+            if model.phase == Battling then
+                Ship.getShipTargets model.toPixel moved walls WallTargets
+
+            else
+                Cmd.none
     in
     ( { model
         | ships = moved
+        , walls = walls
+        , buildable = buildable
       }
     , targetCmd
     )
@@ -87,9 +112,6 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         WallTargets targets ->
-            -- Note that we cannot move the cannonballs in here because this will only fire
-            -- if we have generated new cannonballs
-            -- but that's fine, we can move all existing cannonballs inside Frame
             ( { model | ships = Ship.setShipTargets model.ships targets }, Cmd.none )
 
         Frame time ->
@@ -109,7 +131,33 @@ update msg model =
             )
 
         SetViewport { viewport } ->
-            ( { model | viewport = ( viewport.width, viewport.height ) }, Cmd.none )
+            let
+                ( cols, rows ) =
+                    model.spec.dimensions
+
+                cellWidth =
+                    viewport.width / toFloat cols
+
+                cellHeight =
+                    viewport.height / toFloat rows
+
+                toPixel =
+                    \( x, y ) ->
+                        ( toFloat x * cellWidth + cellWidth / 2
+                        , toFloat y * cellHeight + cellHeight / 2
+                        )
+
+                toCell =
+                    \( x, y ) ->
+                        ( floor (x / cellWidth), floor (y / cellHeight) )
+            in
+            ( { model
+                | viewport = ( viewport.width, viewport.height )
+                , toPixel = toPixel
+                , toCell = toCell
+              }
+            , Cmd.none
+            )
 
         MouseMove p ->
             ( { model | mousePos = Just p }, Cmd.none )
@@ -144,13 +192,9 @@ update msg model =
                             Countdown.prepareForBattle
 
                         shipCmd =
-                            if List.length model.ships < model.spec.ships then
-                                Ship.getRandomShip model.viewport AddShip
-
-                            else
-                                Cmd.none
+                            Ship.getRandomShip model.viewport AddShip
                     in
-                    ( { model | phase = Battling, countdown = countdown }
+                    ( { model | phase = Battling, countdown = countdown, ships = [] }
                     , Cmd.batch
                         [ Cmd.map CountdownMsg countdownCmd
                         , shipCmd
@@ -161,8 +205,18 @@ update msg model =
                     let
                         ( countdown, countdownCmd ) =
                             Countdown.buildAndRepair
+
+                        ships =
+                            model.ships |> List.map (\ship -> { ship | cannonball = Nothing })
                     in
-                    ( { model | phase = Building, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                    ( { model
+                        | phase = Building
+
+                        -- , ships = ships
+                        , countdown = countdown
+                      }
+                    , Cmd.map CountdownMsg countdownCmd
+                    )
 
                 ( Building, True ) ->
                     let
@@ -275,7 +329,7 @@ update msg model =
             ( { model | currentShape = Just shape }, Cmd.none )
 
 
-selectCastle : Point -> Model -> ( Model, Cmd Msg )
+selectCastle : Cell -> Model -> ( Model, Cmd Msg )
 selectCastle cell model =
     if Set.member cell model.spec.castlePoints && not model.castleSelected then
         let
@@ -288,7 +342,7 @@ selectCastle cell model =
         ( model, Cmd.none )
 
 
-placeCannon : Point -> Model -> ( Model, Cmd Msg )
+placeCannon : Cell -> Model -> ( Model, Cmd Msg )
 placeCannon cell model =
     let
         remaining =
@@ -327,7 +381,7 @@ subscriptions model =
                 Sub.none
 
         frameSub =
-            if model.phase == Battling then
+            if model.phase == Battling || model.phase == Building then
                 onAnimationFrameDelta Frame
 
             else

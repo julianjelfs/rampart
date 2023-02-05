@@ -3,7 +3,7 @@ module Shapes exposing (..)
 import Data exposing (Msg(..))
 import List.Extra exposing (getAt)
 import Matrix exposing (Matrix)
-import Point exposing (Point)
+import Position exposing (Cell)
 import Random exposing (Generator)
 import Set exposing (Set)
 
@@ -28,7 +28,7 @@ getShape i =
         |> Maybe.withDefault (Matrix.identity 3)
 
 
-adjacentCells : Point -> List Point
+adjacentCells : Cell -> List Cell
 adjacentCells ( x, y ) =
     [ ( x - 1, y - 1 )
     , ( x - 1, y )
@@ -42,7 +42,7 @@ adjacentCells ( x, y ) =
     ]
 
 
-isAdjacent : Point -> Point -> Bool
+isAdjacent : Cell -> Cell -> Bool
 isAdjacent ( x1, y1 ) ( x2, y2 ) =
     abs (x1 - x2)
         <= 1
@@ -50,19 +50,19 @@ isAdjacent ( x1, y1 ) ( x2, y2 ) =
         <= 1
 
 
-subtractPoint : Point -> Point -> Point
-subtractPoint ( x1, y1 ) ( x2, y2 ) =
+subtractCell : Cell -> Cell -> Cell
+subtractCell ( x1, y1 ) ( x2, y2 ) =
     ( (x1 - x2) + 2, (y1 - y2) + 2 )
 
 
-cellsOccupiedByShape : Point -> Shape -> Set Point
+cellsOccupiedByShape : Cell -> Shape -> Set Cell
 cellsOccupiedByShape center shape =
     adjacentCells center
         |> List.filterMap
             (\p ->
                 let
                     ( x, y ) =
-                        subtractPoint p center
+                        subtractCell p center
                 in
                 if Matrix.get x y shape == Just 1 then
                     Just p
@@ -73,7 +73,7 @@ cellsOccupiedByShape center shape =
         |> Set.fromList
 
 
-overlapsShape : Point -> Shape -> Bool
+overlapsShape : Cell -> Shape -> Bool
 overlapsShape ( x, y ) shape =
     (Matrix.get x y shape |> Maybe.withDefault 0) == 1
 

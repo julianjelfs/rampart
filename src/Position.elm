@@ -1,7 +1,7 @@
-module Point exposing (..)
+module Position exposing (..)
 
 
-type alias Point =
+type alias Cell =
     ( Int, Int )
 
 

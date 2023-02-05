@@ -3,13 +3,14 @@ module View exposing (..)
 import Countdown.View as Countdown
 import Data exposing (Castle(..), Model, Msg(..), Phase(..))
 import Graphics.Cannon as Cannon
+import Graphics.Cannonball as Cannonball
 import Graphics.Castle as CastleSvg
 import Graphics.Ship as Ship
 import Html exposing (Html, button, div)
 import Html.Attributes as H exposing (style)
-import Point exposing (Point)
+import Position exposing (Cell)
 import Set exposing (Set)
-import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractPoint)
+import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractCell)
 import Ship
 import Svg exposing (Attribute, Svg, rect, svg, text)
 import Svg.Attributes exposing (..)
@@ -66,10 +67,10 @@ floatToPixelString f =
     String.fromFloat f ++ "px"
 
 
-isCellShadowed : Point -> Point -> Shape -> Bool
+isCellShadowed : Cell -> Cell -> Shape -> Bool
 isCellShadowed cell overCell currentShape =
     isAdjacent cell overCell
-        && overlapsShape (subtractPoint cell overCell) currentShape
+        && overlapsShape (subtractCell cell overCell) currentShape
 
 
 classList : List ( String, Bool ) -> Attribute msg
@@ -127,6 +128,13 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
                             (toFloat x * cellWidth |> String.fromFloat)
                             (toFloat y * cellHeight |> String.fromFloat)
                     )
+
+        cannonballs =
+            ships
+                |> List.filterMap
+                    (\ship ->
+                        Maybe.map (\{ pos, ballType } -> Cannonball.cannonball ballType pos) ship.cannonball
+                    )
     in
     List.concatMap
         (\r ->
@@ -182,3 +190,4 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
         ++ castles
         ++ cannons
         ++ ships_
+        ++ cannonballs

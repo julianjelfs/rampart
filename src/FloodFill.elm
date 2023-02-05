@@ -1,11 +1,11 @@
 module FloodFill exposing (..)
 
 import Data exposing (Spec)
-import Point exposing (Point)
+import Position exposing (Cell)
 import Set exposing (Set)
 
 
-findBuildableCells : Spec -> Set Point -> Set Point -> Set Point
+findBuildableCells : Spec -> Set Cell -> Set Cell -> Set Cell
 findBuildableCells spec walls cannon =
     let
         enclosed =
@@ -19,17 +19,17 @@ findBuildableCells spec walls cannon =
         enclosed
 
 
-findBuildableCellsWithinCastleWalls : Spec -> Set Point -> Set Point -> Point -> Set Point
+findBuildableCellsWithinCastleWalls : Spec -> Set Cell -> Set Cell -> Cell -> Set Cell
 findBuildableCellsWithinCastleWalls spec walls cannon castle =
     processCell spec walls cannon castle Set.empty
 
 
-findEnclosedCastles : Spec -> Set Point -> Set Point -> Set Point
+findEnclosedCastles : Spec -> Set Cell -> Set Cell -> Set Cell
 findEnclosedCastles spec walls cannon =
     Set.diff spec.castlePoints (processCell spec walls cannon ( -1, -1 ) Set.empty)
 
 
-processCell : Spec -> Set Point -> Set Point -> Point -> Set Point -> Set Point
+processCell : Spec -> Set Cell -> Set Cell -> Cell -> Set Cell -> Set Cell
 processCell spec walls cannon ( x, y ) visited =
     if cellIsValid spec visited walls cannon ( x, y ) then
         let
@@ -45,12 +45,12 @@ processCell spec walls cannon ( x, y ) visited =
         visited
 
 
-cellIsValid : Spec -> Set Point -> Set Point -> Set Point -> Point -> Bool
+cellIsValid : Spec -> Set Cell -> Set Cell -> Set Cell -> Cell -> Bool
 cellIsValid spec visited walls cannon cell =
     isInbounds spec.dimensions cell && notVisited visited cell && unoccupied walls cannon cell
 
 
-isInbounds : Point -> Point -> Bool
+isInbounds : Cell -> Cell -> Bool
 isInbounds ( cols, rows ) ( x, y ) =
     x
         >= -1
@@ -62,12 +62,12 @@ isInbounds ( cols, rows ) ( x, y ) =
         <= rows
 
 
-notVisited : Set Point -> Point -> Bool
+notVisited : Set Cell -> Cell -> Bool
 notVisited visited cell =
     not (Set.member cell visited)
 
 
-unoccupied : Set Point -> Set Point -> Point -> Bool
+unoccupied : Set Cell -> Set Cell -> Cell -> Bool
 unoccupied walls cannon cell =
     not (Set.member cell walls)
         && not (Set.member cell cannon)

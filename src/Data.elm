@@ -3,30 +3,30 @@ module Data exposing (..)
 import Browser.Dom exposing (Viewport)
 import Countdown.Data as Countdown
 import Matrix exposing (Matrix)
-import Point exposing (Pixel, Point)
+import Position exposing (Cell, Pixel)
 import Set exposing (Set)
 import Ship exposing (Ship)
 import Time exposing (Posix)
 
 
 type Castle
-    = Castle Point
+    = Castle Cell
 
 
 type alias Spec =
     { castles : List Castle
-    , castlePoints : Set Point
-    , dimensions : Point
+    , castlePoints : Set Cell
+    , dimensions : Cell
     , ships : Int
     }
 
 
-castle : Point -> Castle
+castle : Cell -> Castle
 castle =
     Castle
 
 
-pointsFromCastles : List Castle -> Set Point
+pointsFromCastles : List Castle -> Set Cell
 pointsFromCastles =
     List.foldr
         (\(Castle ( x, y )) s ->
@@ -57,7 +57,7 @@ roundOne =
     }
 
 
-defaultCastle : Point
+defaultCastle : Cell
 defaultCastle =
     ( 12, 12 )
 
@@ -72,34 +72,35 @@ type Phase
 
 type alias Model =
     { spec : Spec
-    , walls : Set Point
-    , cannon : Set Point
+    , walls : Set Cell
+    , cannon : Set Cell
     , availableCannon : Int
-    , buildable : Set Point
+    , buildable : Set Cell
     , currentShape : Maybe (Matrix Int)
-    , overCell : Maybe Point
+    , overCell : Maybe Cell
     , phase : Phase
     , countdown : Countdown.Model
     , castleSelected : Bool
-    , mousePos : Maybe Point
+    , mousePos : Maybe Cell
     , viewport : Pixel
     , ships : List Ship
-    , lastFrame : Maybe Int
+    , toPixel : Cell -> Pixel
+    , toCell : Pixel -> Cell
     }
 
 
 type Msg
-    = CellClicked Point
+    = CellClicked Cell
     | CastleSelected Castle
     | NextShape (Matrix Int)
     | KeyDown Int
-    | MouseMove Point
-    | MouseOver Point
+    | MouseMove Cell
+    | MouseOver Cell
     | MouseOut
     | CountdownMsg Countdown.Msg
     | StartGame
-    | BuildWall (List Point)
+    | BuildWall (List Cell)
     | SetViewport Viewport
     | AddShip Ship
     | Frame Float
-    | WallTargets (List Point)
+    | WallTargets (List Pixel)

@@ -17,10 +17,10 @@ ship shipType angle x_ y_ =
 
         color =
             case shipType of
-                NormalShip ->
+                Normal ->
                     "#6e4630"
 
-                FireShip ->
+                Fire ->
                     "red"
     in
     svg

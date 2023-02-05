@@ -60,5 +60,7 @@
 
 ## Problems
 
-Castles and cannons need to occupy 4 cells really.
 We need to somehow encode where the coastline is.
+
+Currently the ships move on a fixed vector which is a bit shit. Would be nicer for them to move for
+a bit and then generate a new vector and move for a bit (ensuring that they also stay within bounds)
