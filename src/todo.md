@@ -41,6 +41,8 @@
 
 5. Building
 
+   - sweep the territory and remove any walls that have no neighbouring walls or something like that
+     otherwise it gets very fragmented. Perhaps remove walls with no contiguous N,S,E,W neighbours.
    - run a countdown
    - generate random tetrominos
    - allow placement of tetromino where valid
