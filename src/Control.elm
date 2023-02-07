@@ -4,6 +4,7 @@ import Browser.Dom exposing (getViewport)
 import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onMouseMove)
 import Cannonball
 import Countdown.Control as Countdown
+import Countdown.Data exposing (CountdownResult(..))
 import Data exposing (Castle(..), Model, Msg(..), Phase(..), defaultCastle, roundOne)
 import Dict exposing (Dict)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
@@ -102,23 +103,32 @@ frame delta model =
             else
                 Cmd.none
 
-        myCannonballs =
+        ( myCannonballs, arrived ) =
             Dict.foldl
-                (\k ball dict ->
+                (\k ball ( dict, arr ) ->
                     case Cannonball.moveCannonball delta ball of
                         Nothing ->
-                            -- this ball has reached its destination
-                            -- did it hit its ship
-                            dict
+                            ( dict, ball :: arr )
 
                         Just b ->
-                            Dict.insert k b dict
+                            ( Dict.insert k b dict, arr )
                 )
-                Dict.empty
+                ( Dict.empty, [] )
                 model.cannonballs
+
+        damaged =
+            List.filterMap
+                (\ship ->
+                    if List.any (.pos >> Ship.overlapsPoint ship) arrived then
+                        Nothing
+
+                    else
+                        Just ship
+                )
+                moved
     in
     ( { model
-        | ships = moved
+        | ships = damaged
         , walls = walls
         , buildable = buildable
         , cannonballs = myCannonballs
@@ -162,10 +172,6 @@ update msg model =
 
                 toPixel =
                     \( x, y ) ->
-                        let
-                            _ =
-                                Debug.log "stuff" ( cellWidth, cellHeight, ( x, y ) )
-                        in
                         ( toFloat x * cellWidth + cellWidth / 2
                         , toFloat y * cellHeight + cellHeight / 2
                         )
@@ -190,76 +196,89 @@ update msg model =
                 ( countdown, countdownCmd ) =
                     Countdown.selectCastle
             in
-            ( { model | phase = CastleSelection, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+            ( { model | phase = Interstitial CastleSelection, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
         CountdownMsg subMsg ->
             let
-                ( subModel, finished ) =
+                ( subModel, result ) =
                     Countdown.update subMsg model.countdown
             in
-            case ( model.phase, finished ) of
-                ( CastleSelection, True ) ->
-                    if not model.castleSelected then
-                        selectCastle defaultCastle model
+            case result of
+                IntroComplete ->
+                    case model.phase of
+                        Interstitial next ->
+                            ( { model | phase = next, countdown = subModel }, Cmd.none )
 
-                    else
-                        let
-                            ( countdown, countdownCmd ) =
-                                Countdown.placeCannon
-                        in
-                        ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                        _ ->
+                            ( { model | countdown = subModel }, Cmd.none )
 
-                ( Placing, True ) ->
-                    let
-                        ( countdown, countdownCmd ) =
-                            Countdown.prepareForBattle
-
-                        shipCmd =
-                            Ship.getRandomShip model.viewport AddShip
-                    in
-                    ( { model | phase = Battling, countdown = countdown, ships = [] }
-                    , Cmd.batch
-                        [ Cmd.map CountdownMsg countdownCmd
-                        , shipCmd
-                        ]
-                    )
-
-                ( Battling, True ) ->
-                    let
-                        ( countdown, countdownCmd ) =
-                            Countdown.buildAndRepair
-
-                        ships =
-                            model.ships |> List.map (\ship -> { ship | cannonball = Nothing })
-                    in
-                    ( { model
-                        | phase = Building
-
-                        -- , ships = ships
-                        , countdown = countdown
-                      }
-                    , Cmd.map CountdownMsg countdownCmd
-                    )
-
-                ( Building, True ) ->
-                    let
-                        -- if you have no enclosed castles then I guess it's game over
-                        enclosed =
-                            findEnclosedCastles model.spec model.walls model.cannon
-
-                        ( countdown, countdownCmd ) =
-                            Countdown.placeCannon
-                    in
-                    ( { model
-                        | phase = Placing
-                        , countdown = countdown
-                        , availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
-                      }
-                    , Cmd.map CountdownMsg countdownCmd
-                    )
-
-                _ ->
+                NoResult ->
                     ( { model | countdown = subModel }, Cmd.none )
+
+                CountdownComplete ->
+                    case model.phase of
+                        CastleSelection ->
+                            if not model.castleSelected then
+                                selectCastle defaultCastle model
+
+                            else
+                                let
+                                    ( countdown, countdownCmd ) =
+                                        Countdown.placeCannon
+                                in
+                                ( { model | phase = Interstitial Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+
+                        Placing ->
+                            let
+                                ( countdown, countdownCmd ) =
+                                    Countdown.prepareForBattle
+
+                                shipCmd =
+                                    Ship.getRandomShip model.viewport AddShip
+                            in
+                            ( { model | phase = Interstitial Battling, countdown = countdown, ships = [] }
+                            , Cmd.batch
+                                [ Cmd.map CountdownMsg countdownCmd
+                                , shipCmd
+                                ]
+                            )
+
+                        Battling ->
+                            let
+                                ( countdown, countdownCmd ) =
+                                    Countdown.buildAndRepair
+
+                                ships =
+                                    model.ships |> List.map (\ship -> { ship | cannonball = Nothing })
+                            in
+                            ( { model
+                                | phase = Interstitial Building
+
+                                -- , ships = ships
+                                , countdown = countdown
+                              }
+                            , Cmd.map CountdownMsg countdownCmd
+                            )
+
+                        Building ->
+                            let
+                                -- if you have no enclosed castles then I guess it's game over
+                                enclosed =
+                                    findEnclosedCastles model.spec model.walls model.cannon
+
+                                ( countdown, countdownCmd ) =
+                                    Countdown.placeCannon
+                            in
+                            ( { model
+                                | phase = Interstitial Placing
+                                , countdown = countdown
+                                , availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
+                              }
+                            , Cmd.map CountdownMsg countdownCmd
+                            )
+
+                        _ ->
+                            ( { model | countdown = subModel }, Cmd.none )
 
         BuildWall blocks ->
             case blocks of
@@ -277,13 +296,18 @@ update msg model =
                         ( countdown, countdownCmd ) =
                             Countdown.placeCannon
                     in
-                    ( { model | phase = Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                    ( { model | phase = Interstitial Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
 
         CastleSelected (Castle cell) ->
-            selectCastle (Debug.log "cell" cell) model
+            case model.phase of
+                CastleSelection ->
+                    selectCastle cell model
+
+                _ ->
+                    ( model, Cmd.none )
 
         CellClicked cell ->
-            case model.phase of
+            case Debug.log "Phase" model.phase of
                 Placing ->
                     placeCannon cell model
 
@@ -432,7 +456,7 @@ subscriptions model =
                 Sub.none
 
         frameSub =
-            if model.phase == Battling || model.phase == Building then
+            if model.phase == Battling || model.phase == Building || model.phase == Interstitial Building then
                 onAnimationFrameDelta Frame
 
             else

@@ -13,3 +13,9 @@ type Msg
     = Tick Posix
     | FinishIntro
     | Stop
+
+
+type CountdownResult
+    = IntroComplete
+    | CountdownComplete
+    | NoResult

@@ -23,6 +23,22 @@ type alias Ship =
     }
 
 
+
+-- TODO this is a bit crude at the moment as it doesn't account for the ships orientation
+
+
+overlapsPoint : Ship -> Pixel -> Bool
+overlapsPoint { pos } ( bx, by ) =
+    let
+        limit =
+            10
+
+        ( sx, sy ) =
+            pos
+    in
+    abs sx - bx < limit && abs sy - by < limit
+
+
 shipAngle : Pixel -> Float
 shipAngle ( x, y ) =
     atan2 y x |> radiansToDegrees

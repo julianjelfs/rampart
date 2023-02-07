@@ -69,6 +69,7 @@ type Phase
     | Placing
     | Battling
     | CastleSelection
+    | Interstitial Phase
     | Start
 
 

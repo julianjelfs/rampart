@@ -1,6 +1,6 @@
 module Countdown.Control exposing (..)
 
-import Countdown.Data exposing (Model(..), Msg(..))
+import Countdown.Data exposing (CountdownResult(..), Model(..), Msg(..))
 import Process
 import Task
 import Time exposing (Posix)
@@ -43,34 +43,34 @@ start label sub time =
     )
 
 
-update : Msg -> Model -> ( Model, Bool )
+update : Msg -> Model -> ( Model, CountdownResult )
 update msg model =
     case ( model, msg ) of
         ( Idle, _ ) ->
-            ( model, True )
+            ( model, NoResult )
 
         ( Intro l s n, msg_ ) ->
             case msg_ of
                 FinishIntro ->
-                    ( CountingDown l n, False )
+                    ( CountingDown l n, IntroComplete )
 
                 _ ->
-                    ( Intro l s n, False )
+                    ( Intro l s n, NoResult )
 
         ( CountingDown l n, msg_ ) ->
             case msg_ of
                 Stop ->
-                    ( Idle, True )
+                    ( Idle, CountdownComplete )
 
                 Tick _ ->
                     if n > 0 then
-                        ( CountingDown l (n - 1), False )
+                        ( CountingDown l (n - 1), NoResult )
 
                     else
-                        ( Idle, True )
+                        ( Idle, CountdownComplete )
 
                 _ ->
-                    ( CountingDown l n, False )
+                    ( CountingDown l n, NoResult )
 
 
 subscriptions : Model -> Sub Msg
