@@ -24,19 +24,34 @@ type alias Ship =
 
 
 
--- TODO this is a bit crude at the moment as it doesn't account for the ships orientation
+-- TODO this calculates the distance between the cannonball (center) and the
+-- ship center and considers it a hit if the distance is less than some limit
+-- which is not ideal as it doesn't account for orientation, but it'll do for now
 
 
 overlapsPoint : Ship -> Pixel -> Bool
 overlapsPoint { pos } ( bx, by ) =
     let
+        -- half ship hitbox
+        offset =
+            60
+
         limit =
-            10
+            50
 
         ( sx, sy ) =
             pos
+
+        diffx =
+            abs (sx + offset - bx)
+
+        diffy =
+            abs (sy + offset - by)
+
+        distance =
+            sqrt ((diffx * diffx) + (diffy * diffy))
     in
-    abs sx - bx < limit && abs sy - by < limit
+    distance < limit
 
 
 shipAngle : Pixel -> Float

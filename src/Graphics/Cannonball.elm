@@ -7,6 +7,12 @@ import Svg.Attributes as SA exposing (..)
 
 cannonball ballType ( x_, y_ ) =
     let
+        w =
+            15
+
+        h =
+            15
+
         color =
             case ballType of
                 Normal ->
@@ -15,5 +21,12 @@ cannonball ballType ( x_, y_ ) =
                 Fire ->
                     "red"
     in
-    svg [ class "cannonball", width "15", height "15", x (String.fromFloat x_), y (String.fromFloat y_), viewBox "0 0 24 24" ]
+    svg
+        [ class "cannonball"
+        , width (String.fromInt w)
+        , height (String.fromInt h)
+        , x (String.fromFloat (x_ - w / 2))
+        , y (String.fromFloat (y_ - h / 2))
+        , viewBox "0 0 24 24"
+        ]
         [ Svg.circle [ cx "12", cy "12", r "12", fill color ] [] ]
