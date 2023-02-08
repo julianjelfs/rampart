@@ -5,7 +5,7 @@ import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onMouseMove)
 import Cannonball
 import Countdown.Control as Countdown
 import Countdown.Data exposing (CountdownResult(..))
-import Data exposing (Castle(..), Model, Msg(..), Phase(..), defaultCastle, roundOne)
+import Data exposing (Castle(..), Model, Msg(..), defaultCastle, roundOne)
 import Dict exposing (Dict)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles)
 import Json.Decode as D
@@ -16,7 +16,7 @@ import Shapes exposing (cellsOccupiedByShape, getRandomShape, rotate90)
 import Ship
 import Task
 import TestData exposing (enclosed)
-import Time exposing (millisToPosix, posixToMillis)
+import Workflow
 
 
 init : ( Model, Cmd Msg )
@@ -28,7 +28,7 @@ init =
       , buildable = Set.empty
       , currentShape = Nothing
       , overCell = Nothing
-      , phase = Start
+      , phase = Workflow.init
       , countdown = Countdown.init
       , castleSelected = False
       , availableCannon = 3
@@ -97,7 +97,7 @@ frame delta model =
                 model.buildable
 
         targetCmd =
-            if model.phase == Battling then
+            if Workflow.battling model.phase then
                 Ship.getShipTargets model.toPixel moved walls WallTargets
 
             else
@@ -192,93 +192,60 @@ update msg model =
             ( { model | mousePos = Just p }, Cmd.none )
 
         StartGame ->
-            let
-                ( countdown, countdownCmd ) =
-                    Countdown.selectCastle
-            in
-            ( { model | phase = Interstitial CastleSelection, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+            Workflow.next model
 
         CountdownMsg subMsg ->
             let
+                phase =
+                    model.phase
+
                 ( subModel, result ) =
                     Countdown.update subMsg model.countdown
             in
             case result of
                 IntroComplete ->
-                    case model.phase of
-                        Interstitial next ->
-                            ( { model | phase = next, countdown = subModel }, Cmd.none )
-
-                        _ ->
-                            ( { model | countdown = subModel }, Cmd.none )
+                    ( { model | phase = Workflow.endIntro phase, countdown = subModel }, Cmd.none )
 
                 NoResult ->
                     ( { model | countdown = subModel }, Cmd.none )
 
                 CountdownComplete ->
-                    case model.phase of
-                        CastleSelection ->
-                            if not model.castleSelected then
-                                selectCastle defaultCastle model
+                    let
+                        ( updated, cmd ) =
+                            Workflow.next model
+                    in
+                    if Workflow.castleSelection phase then
+                        if not model.castleSelected then
+                            selectCastle defaultCastle model
 
-                            else
-                                let
-                                    ( countdown, countdownCmd ) =
-                                        Countdown.placeCannon
-                                in
-                                ( { model | phase = Interstitial Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                        else
+                            ( updated, cmd )
 
-                        Placing ->
-                            let
-                                ( countdown, countdownCmd ) =
-                                    Countdown.prepareForBattle
+                    else if Workflow.placing phase then
+                        ( { updated | ships = [] }
+                        , Cmd.batch
+                            [ cmd
+                            , Ship.getRandomShip model.viewport AddShip
+                            ]
+                        )
 
-                                shipCmd =
-                                    Ship.getRandomShip model.viewport AddShip
-                            in
-                            ( { model | phase = Interstitial Battling, countdown = countdown, ships = [] }
-                            , Cmd.batch
-                                [ Cmd.map CountdownMsg countdownCmd
-                                , shipCmd
-                                ]
-                            )
+                    else if Workflow.battling phase then
+                        ( updated, cmd )
 
-                        Battling ->
-                            let
-                                ( countdown, countdownCmd ) =
-                                    Countdown.buildAndRepair
+                    else if Workflow.building phase then
+                        let
+                            -- if you have no enclosed castles then I guess it's game over
+                            enclosed =
+                                findEnclosedCastles model.spec model.walls model.cannon
+                        in
+                        ( { updated
+                            | availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
+                          }
+                        , cmd
+                        )
 
-                                ships =
-                                    model.ships |> List.map (\ship -> { ship | cannonball = Nothing })
-                            in
-                            ( { model
-                                | phase = Interstitial Building
-
-                                -- , ships = ships
-                                , countdown = countdown
-                              }
-                            , Cmd.map CountdownMsg countdownCmd
-                            )
-
-                        Building ->
-                            let
-                                -- if you have no enclosed castles then I guess it's game over
-                                enclosed =
-                                    findEnclosedCastles model.spec model.walls model.cannon
-
-                                ( countdown, countdownCmd ) =
-                                    Countdown.placeCannon
-                            in
-                            ( { model
-                                | phase = Interstitial Placing
-                                , countdown = countdown
-                                , availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
-                              }
-                            , Cmd.map CountdownMsg countdownCmd
-                            )
-
-                        _ ->
-                            ( { model | countdown = subModel }, Cmd.none )
+                    else
+                        ( { model | countdown = subModel }, Cmd.none )
 
         BuildWall blocks ->
             case blocks of
@@ -292,99 +259,93 @@ update msg model =
                     )
 
                 _ ->
-                    let
-                        ( countdown, countdownCmd ) =
-                            Countdown.placeCannon
-                    in
-                    ( { model | phase = Interstitial Placing, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+                    Workflow.next model
 
         CastleSelected (Castle cell) ->
-            case model.phase of
-                CastleSelection ->
-                    selectCastle cell model
+            if Workflow.castleSelection model.phase then
+                selectCastle cell model
 
-                _ ->
-                    ( model, Cmd.none )
+            else
+                ( model, Cmd.none )
 
         CellClicked cell ->
-            case Debug.log "Phase" model.phase of
-                Placing ->
-                    placeCannon cell model
+            if Workflow.placing model.phase then
+                placeCannon cell model
 
-                Battling ->
-                    let
-                        cannon =
-                            model.cannon
-                                |> Set.toList
-                                |> List.filter (\c -> not <| Dict.member c model.cannonballs)
-                                |> List.head
-                    in
-                    case cannon of
-                        Nothing ->
-                            ( model, Cmd.none )
+            else if Workflow.battling model.phase then
+                let
+                    cannon =
+                        model.cannon
+                            |> Set.toList
+                            |> List.filter (\c -> not <| Dict.member c model.cannonballs)
+                            |> List.head
+                in
+                case cannon of
+                    Nothing ->
+                        ( model, Cmd.none )
 
-                        Just cannon_ ->
-                            let
-                                source =
-                                    model.toPixel cannon_
+                    Just cannon_ ->
+                        let
+                            source =
+                                model.toPixel cannon_
 
-                                target =
-                                    model.toPixel cell
+                            target =
+                                model.toPixel cell
 
-                                cannonball =
-                                    Cannonball.createCannonball Cannonball.Normal source target
+                            cannonball =
+                                Cannonball.createCannonball Cannonball.Normal source target
 
-                                cannonballs =
-                                    Dict.insert cannon_ cannonball model.cannonballs
-                            in
-                            ( { model | cannonballs = cannonballs }, Cmd.none )
+                            cannonballs =
+                                Dict.insert cannon_ cannonball model.cannonballs
+                        in
+                        ( { model | cannonballs = cannonballs }, Cmd.none )
 
-                Building ->
-                    case model.currentShape of
-                        Nothing ->
-                            ( model, Cmd.none )
+            else if Workflow.building model.phase then
+                case model.currentShape of
+                    Nothing ->
+                        ( model, Cmd.none )
 
-                        Just shape ->
-                            let
-                                footprint =
-                                    cellsOccupiedByShape cell shape
+                    Just shape ->
+                        let
+                            footprint =
+                                cellsOccupiedByShape cell shape
 
-                                obstacles =
-                                    Set.union model.walls model.cannon |> Set.union model.spec.castlePoints
+                            obstacles =
+                                Set.union model.walls model.cannon |> Set.union model.spec.castlePoints
 
-                                valid =
-                                    Set.intersect footprint obstacles |> Set.isEmpty
+                            valid =
+                                Set.intersect footprint obstacles |> Set.isEmpty
 
-                                walls =
-                                    if valid then
-                                        Set.union model.walls footprint
+                            walls =
+                                if valid then
+                                    Set.union model.walls footprint
 
-                                    else
-                                        model.walls
+                                else
+                                    model.walls
 
-                                buildable =
-                                    if valid then
-                                        findBuildableCells model.spec walls model.cannon
+                            buildable =
+                                if valid then
+                                    findBuildableCells model.spec walls model.cannon
 
-                                    else
-                                        model.buildable
+                                else
+                                    model.buildable
 
-                                cmd =
-                                    if valid then
-                                        getRandomShape
+                            cmd =
+                                if valid then
+                                    getRandomShape
 
-                                    else
-                                        Cmd.none
-                            in
-                            ( { model
-                                | walls = walls
-                                , buildable = buildable
-                              }
-                            , cmd
-                            )
+                                else
+                                    Cmd.none
+                        in
+                        ( { model
+                            | walls = walls
+                            , buildable = buildable
+                          }
+                        , cmd
+                        )
 
-                _ ->
-                    ( model, Cmd.none )
+            else
+                ( model, Cmd.none )
 
         MouseOver p ->
             ( { model | overCell = Just p }, Cmd.none )
@@ -449,14 +410,14 @@ subscriptions model =
             Sub.map CountdownMsg (Countdown.subscriptions model.countdown)
 
         mousePos =
-            if model.phase == Placing then
+            if Workflow.placing model.phase then
                 onMouseMove (D.map MouseMove mousePosDecoder)
 
             else
                 Sub.none
 
         frameSub =
-            if model.phase == Battling || model.phase == Building || model.phase == Interstitial Building then
+            if Workflow.animate model.phase then
                 onAnimationFrameDelta Frame
 
             else

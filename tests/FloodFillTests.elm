@@ -1,9 +1,10 @@
 module FloodFillTests exposing (..)
 
-import Data exposing (Point, Spec, castle, pointsFromCastles, roundOne)
+import Data exposing (Spec, castle, pointsFromCastles, roundOne)
 import Expect exposing (Expectation)
 import FloodFill exposing (findBuildableCells, findEnclosedCastles, isInbounds, notVisited)
 import Fuzz exposing (Fuzzer, int, list, string)
+import Position exposing (Cell)
 import Set exposing (Set)
 import Test exposing (..)
 import TestData exposing (enclosed)
@@ -25,13 +26,13 @@ testSpec =
     }
 
 
-testCannon : Set Point
+testCannon : Set Cell
 testCannon =
     Set.fromList
         [ ( 1, 1 ), ( 1, 2 ) ]
 
 
-testWalls : Set Point
+testWalls : Set Cell
 testWalls =
     Set.fromList
         [ ( 0, 0 )

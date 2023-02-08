@@ -1,22 +1,23 @@
 module View exposing (..)
 
 import Countdown.View as Countdown
-import Data exposing (Castle(..), Model, Msg(..), Phase(..))
-import Dict exposing (Dict)
+import Data exposing (Castle(..), Model, Msg(..))
+import Dict
 import Graphics.Cannon as Cannon
 import Graphics.Cannonball as Cannonball
 import Graphics.Castle as CastleSvg
 import Graphics.Ship as Ship
 import Graphics.Target as Target
 import Html exposing (Html, button, div)
-import Html.Attributes as H exposing (style)
+import Html.Attributes as H
 import Position exposing (Cell)
-import Set exposing (Set)
+import Set
 import Shapes exposing (Shape, isAdjacent, overlapsShape, subtractCell)
 import Ship
 import Svg exposing (Attribute, Svg, rect, svg, text)
-import Svg.Attributes as SA exposing (..)
+import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick, onMouseOut, onMouseOver)
+import Workflow
 
 
 view : Model -> Html Msg
@@ -25,14 +26,14 @@ view model =
         ( w, h ) =
             model.viewport
     in
-    case model.phase of
-        Start ->
-            startView
+    if Workflow.starting model.phase then
+        startView
 
-        _ ->
-            div []
-                [ case ( model.phase, model.mousePos ) of
-                    ( Placing, Just ( left, top ) ) ->
+    else
+        div []
+            [ if Workflow.placing model.phase then
+                case model.mousePos of
+                    Just ( left, top ) ->
                         div
                             [ H.style "left" (String.fromInt (left + 10) ++ "px")
                             , H.style "top" (String.fromInt top ++ "px")
@@ -42,16 +43,19 @@ view model =
 
                     _ ->
                         text ""
-                , Html.map CountdownMsg (Countdown.view model.countdown)
-                , svg
-                    [ preserveAspectRatio "none"
-                    , class "root"
-                    , width "100%"
-                    , height "100%"
-                    , viewBox <| "0 0 " ++ String.fromFloat w ++ " " ++ String.fromFloat h
-                    ]
-                    (grid model)
+
+              else
+                text ""
+            , Html.map CountdownMsg (Countdown.view model.countdown)
+            , svg
+                [ preserveAspectRatio "none"
+                , class "root"
+                , width "100%"
+                , height "100%"
+                , viewBox <| "0 0 " ++ String.fromFloat w ++ " " ++ String.fromFloat h
                 ]
+                (grid model)
+            ]
 
 
 startView : Html Msg
@@ -170,7 +174,7 @@ grid { spec, phase, walls, cannon, buildable, currentShape, overCell, viewport, 
                             Set.member ( c, r ) buildable
 
                         shadowed =
-                            if phase /= Building then
+                            if not (Workflow.building phase) then
                                 False
 
                             else

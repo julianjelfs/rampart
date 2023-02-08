@@ -1,6 +1,6 @@
 module MatrixTests exposing (..)
 
-import Data exposing (Point, Spec, roundOne)
+import Data exposing (Spec, roundOne)
 import Expect exposing (Expectation)
 import Matrix exposing (Matrix)
 import Set exposing (Set)

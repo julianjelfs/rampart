@@ -1,6 +1,7 @@
 module Ship exposing (..)
 
 import Cannonball exposing (Cannonball, createCannonball)
+import Html exposing (time)
 import List.Extra as List
 import Position exposing (Cell, Pixel)
 import Random exposing (Generator)
@@ -13,9 +14,17 @@ type ShipType
     | Fire
 
 
+type Direction
+    = Left
+    | Right
+
+
 type alias Ship =
     { damage : Float
     , cannonball : Maybe Cannonball
+    , timeSinceCourseChange : Float
+    , courseInterval : Float
+    , changes : List Direction
     , pos : Pixel
     , shipType : ShipType
     , vector : ( Float, Float )
@@ -54,9 +63,9 @@ overlapsPoint { pos } ( bx, by ) =
     distance < limit
 
 
-shipAngle : Pixel -> Float
+shipAngle : ( Float, Float ) -> Float
 shipAngle ( x, y ) =
-    atan2 y x |> radiansToDegrees
+    atan2 y x |> radiansToDegrees |> Debug.log "Angle"
 
 
 radiansToDegrees : Float -> Float
@@ -135,6 +144,45 @@ moveShips vp delta ships =
         |> List.map (moveCannonball delta)
 
 
+flipVector : Float -> ( Float, Float ) -> List Direction -> ( Float, Float )
+flipVector v ( x, y ) changes =
+    let
+        rotateAnti d =
+            ( cos d * x - sin d * y
+            , sin d * x + cos d * y
+            )
+
+        angle =
+            v * 500
+    in
+    case changes of
+        Left :: _ ->
+            rotateAnti (degrees angle)
+
+        Right :: _ ->
+            rotateAnti (degrees (360 - angle))
+
+        _ ->
+            ( x, y )
+
+
+courseChange : Float -> Ship -> ( Float, ( Float, Float ), List Direction )
+courseChange delta { timeSinceCourseChange, vector, velocity, courseInterval, changes } =
+    if timeSinceCourseChange < courseInterval then
+        ( timeSinceCourseChange + delta, vector, changes )
+
+    else
+        case changes of
+            x :: xs ->
+                ( 0
+                , flipVector velocity vector changes
+                , xs ++ [ x ]
+                )
+
+            _ ->
+                ( timeSinceCourseChange + delta, vector, changes )
+
+
 moveShip : Pixel -> Float -> Ship -> Ship
 moveShip ( width, height ) delta ship =
     let
@@ -150,29 +198,30 @@ moveShip ( width, height ) delta ship =
         minWidth =
             width / 2
 
-        { pos, vector, velocity } =
+        { pos, velocity } =
             ship
 
         ( x, y ) =
             pos
 
+        ( t, v, changes ) =
+            courseChange delta ship
+
         ( vx, vy ) =
-            vector
+            v
 
         x_ =
             x + delta * vx * velocity
 
         y_ =
             y + delta * vy * velocity
-
-        v =
-            if x_ > maxWidth || x_ < minWidth || y_ > maxHeight || y_ < minHeight then
-                velocity
-
-            else
-                velocity
     in
-    { ship | pos = ( clamp minWidth maxWidth x_, clamp minHeight maxHeight y_ ), velocity = v }
+    { ship
+        | pos = ( clamp minWidth maxWidth x_, clamp minHeight maxHeight y_ )
+        , vector = v
+        , changes = changes
+        , timeSinceCourseChange = t
+    }
 
 
 getTargets : (Cell -> Pixel) -> Set Cell -> (List Pixel -> msg) -> Int -> Cmd msg
@@ -199,12 +248,34 @@ getRandomShip viewport msg =
 
 randomShipGenerator : Pixel -> Generator Ship
 randomShipGenerator vp =
-    Random.map4 (Ship 0 Nothing) (positionGenerator vp) shipTypeGenerator vectorGenerator velocityGenerator
+    Random.constant (Ship 0 Nothing 0)
+        |> apply courseIntervalGenerator
+        |> apply directionGenerator
+        |> apply (positionGenerator vp)
+        |> apply shipTypeGenerator
+        |> apply vectorGenerator
+        |> apply velocityGenerator
+
+
+apply : Generator a -> Generator (a -> b) -> Generator b
+apply g r =
+    Random.andThen (\a -> Random.map (\fn -> fn a) r) g
 
 
 positionGenerator : Pixel -> Generator Pixel
 positionGenerator ( width, height ) =
     Random.pair (Random.float (width * 0.75) width) (Random.float 0 height)
+
+
+courseIntervalGenerator : Generator Float
+courseIntervalGenerator =
+    Random.float 500 2000
+
+
+directionGenerator : Generator (List Direction)
+directionGenerator =
+    Random.list 20 <|
+        Random.weighted ( 50, Left ) [ ( 50, Right ) ]
 
 
 shipTypeGenerator : Generator ShipType

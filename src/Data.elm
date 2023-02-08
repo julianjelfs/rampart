@@ -15,6 +15,15 @@ type Castle
     = Castle Cell
 
 
+type Phase
+    = Building
+    | Placing
+    | Battling
+    | CastleSelection
+    | Interstitial Phase
+    | Start
+
+
 type alias Spec =
     { castles : List Castle
     , castlePoints : Set Cell
@@ -62,15 +71,6 @@ roundOne =
 defaultCastle : Cell
 defaultCastle =
     ( 12, 12 )
-
-
-type Phase
-    = Building
-    | Placing
-    | Battling
-    | CastleSelection
-    | Interstitial Phase
-    | Start
 
 
 type alias Model =

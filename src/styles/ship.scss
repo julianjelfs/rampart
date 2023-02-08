@@ -1,4 +1,8 @@
 .ship {
   border: 1px solid red;
   pointer-events: none;
+
+  g {
+    // transition: transform 400ms ease-in-out;
+  }
 }
