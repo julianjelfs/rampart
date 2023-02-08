@@ -19,6 +19,7 @@
 
    - make sure that we can only place a cannon in an enclosed empty space
    - make sure we maintain the number of available cannon
+   - if cannons are not enclosed, they stay there, but they do not fire
 
 4. Battle
 
@@ -63,6 +64,3 @@
 ## Problems
 
 We need to somehow encode where the coastline is.
-
-Currently the ships move on a fixed vector which is a bit shit. Would be nicer for them to move for
-a bit and then generate a new vector and move for a bit (ensuring that they also stay within bounds)
