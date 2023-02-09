@@ -39,6 +39,12 @@ createParabolator ( sx, sy ) ( tx, ty ) =
         mx =
             Debug.log "mid" <| (sx + tx) / 2
 
+        dy =
+            ty - sy
+
+        dx =
+            abs (sx - tx)
+
         -- this is the vertex
         ( vx, vy ) =
             Debug.log "vertex" <| ( mx, min sy ty - 200 )
@@ -46,7 +52,20 @@ createParabolator ( sx, sy ) ( tx, ty ) =
         -- given the vertex, figure out the coefficient a
         fn =
             \x ->
-                Debug.log "Y value" <| findCoefficient ( sx, sy ) ( vx, vy ) * (x - vx) * (x - vx) + vy
+                let
+                    dx_ =
+                        abs (sx - x)
+
+                    frac =
+                        dx_ / dx
+
+                    adjust =
+                        dy * frac
+
+                    y =
+                        findCoefficient ( sx, sy ) ( vx, vy ) * (x - vx) * (x - vx) + vy
+                in
+                Debug.log "Y value" <| y + adjust
     in
     fn
 

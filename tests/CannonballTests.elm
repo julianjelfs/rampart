@@ -41,13 +41,13 @@ testFunctionTwo =
     in
     [ test "at the 1/2 point" <|
         \_ ->
-            Expect.within (Absolute 0.00001) 200 (fn 942.5)
+            Expect.within (Absolute 0.00001) -29 (fn 942.5)
     , test "at the 1/4 point" <|
         \_ ->
-            Expect.within (Absolute 0.00001) 364.5 (fn 792.75)
+            Expect.within (Absolute 0.00001) 250 (fn 792.75)
     , test "at the 3/4 point" <|
         \_ ->
-            Expect.within (Absolute 0.00001) 364.5 (fn 1092.25)
+            Expect.within (Absolute 0.00001) 21 (fn 1092.25)
     , test "hits the target" <|
         \_ ->
             Expect.within (Absolute 0.00001) 400 (fn 1242)
