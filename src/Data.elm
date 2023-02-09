@@ -21,6 +21,7 @@ type Phase
     | Battling
     | CastleSelection
     | Interstitial Phase
+    | GameOver
     | Start
 
 

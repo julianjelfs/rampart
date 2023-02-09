@@ -19,25 +19,30 @@ import TestData exposing (enclosed)
 import Workflow
 
 
+initialModel : Model
+initialModel =
+    { spec = roundOne
+    , walls = Set.empty
+    , cannon = Set.empty
+    , cannonballs = Dict.empty
+    , buildable = Set.empty
+    , currentShape = Nothing
+    , overCell = Nothing
+    , phase = Workflow.init
+    , countdown = Countdown.init
+    , castleSelected = False
+    , availableCannon = 3
+    , mousePos = Nothing
+    , viewport = ( 0, 0 )
+    , ships = []
+    , toPixel = \_ -> ( 0, 0 )
+    , toCell = \_ -> ( 0, 0 )
+    }
+
+
 init : ( Model, Cmd Msg )
 init =
-    ( { spec = roundOne
-      , walls = Set.empty
-      , cannon = Set.empty
-      , cannonballs = Dict.empty
-      , buildable = Set.empty
-      , currentShape = Nothing
-      , overCell = Nothing
-      , phase = Workflow.init
-      , countdown = Countdown.init
-      , castleSelected = False
-      , availableCannon = 3
-      , mousePos = Nothing
-      , viewport = ( 0, 0 )
-      , ships = []
-      , toPixel = \_ -> ( 0, 0 )
-      , toCell = \_ -> ( 0, 0 )
-      }
+    ( initialModel
     , Cmd.batch
         [ getRandomShape
         , Task.perform SetViewport getViewport
@@ -238,11 +243,19 @@ update msg model =
                             enclosed =
                                 findEnclosedCastles model.spec model.walls model.cannon
                         in
-                        ( { updated
-                            | availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
-                          }
-                        , cmd
-                        )
+                        if Set.size enclosed == 0 then
+                            let
+                                ( m, c ) =
+                                    init
+                            in
+                            ( { m | phase = Workflow.endGame }, c )
+
+                        else
+                            ( { updated
+                                | availableCannon = model.availableCannon + 1 + (Set.size enclosed // 4)
+                              }
+                            , cmd
+                            )
 
                     else
                         ( { model | countdown = subModel }, Cmd.none )

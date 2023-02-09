@@ -29,6 +29,9 @@ view model =
     if Workflow.starting model.phase then
         startView
 
+    else if Workflow.gameOver model.phase then
+        gameOverView
+
     else
         div []
             [ if Workflow.placing model.phase then
@@ -56,6 +59,16 @@ view model =
                 ]
                 (grid model)
             ]
+
+
+gameOverView : Html Msg
+gameOverView =
+    div [ class "welcome" ]
+        [ div [ class "welcome__card" ]
+            [ div [ class "welcome__title" ] [ text "Game Over!" ]
+            , button [ onClick StartGame, class "welcome__start" ] [ text "New game" ]
+            ]
+        ]
 
 
 startView : Html Msg

@@ -53,6 +53,9 @@ createParabolator ( sx, sy ) ( tx, ty ) =
         fn =
             \x ->
                 let
+                    -- this adjustment is not quite right at the moment
+                    -- it causes the cannonballs to go very high if the
+                    -- target is a long way above the source
                     dx_ =
                         abs (sx - x)
 

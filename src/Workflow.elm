@@ -1,4 +1,4 @@
-module Workflow exposing (animate, battling, building, castleSelection, endIntro, init, next, placing, starting)
+module Workflow exposing (animate, battling, building, castleSelection, endGame, endIntro, gameOver, init, next, placing, starting)
 
 import Countdown.Control as Countdown
 import Countdown.Data as Countdown
@@ -20,6 +20,11 @@ endIntro phase =
             phase
 
 
+endGame : Phase
+endGame =
+    GameOver
+
+
 animate : Phase -> Bool
 animate phase =
     phase == Battling || phase == Building || phase == Interstitial Building
@@ -33,6 +38,11 @@ castleSelection =
 starting : Phase -> Bool
 starting =
     (==) Start
+
+
+gameOver : Phase -> Bool
+gameOver =
+    (==) GameOver
 
 
 battling : Phase -> Bool
@@ -53,6 +63,13 @@ building =
 next : Model -> ( Model, Cmd Msg )
 next model =
     case model.phase of
+        GameOver ->
+            let
+                ( countdown, countdownCmd ) =
+                    Countdown.selectCastle
+            in
+            ( { model | phase = Interstitial CastleSelection, countdown = countdown }, Cmd.map CountdownMsg countdownCmd )
+
         Start ->
             let
                 ( countdown, countdownCmd ) =
