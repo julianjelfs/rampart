@@ -65,7 +65,7 @@ overlapsPoint { pos } ( bx, by ) =
 
 shipAngle : ( Float, Float ) -> Float
 shipAngle ( x, y ) =
-    atan2 y x |> radiansToDegrees |> Debug.log "Angle"
+    atan2 y x |> radiansToDegrees
 
 
 radiansToDegrees : Float -> Float

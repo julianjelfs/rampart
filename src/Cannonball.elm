@@ -24,25 +24,29 @@ type alias Cannonball =
 -- seems like it *should* work but it doesn't. Might need to write some tests
 
 
+findCoefficient : ( Float, Float ) -> ( Float, Float ) -> Float
+findCoefficient ( sx, sy ) ( vx, vy ) =
+    Debug.log "A coefficient" <| (sy - vy) / ((sx - vx) * (sx - vx))
+
+
 createParabolator : Pixel -> Pixel -> (Float -> Float)
 createParabolator ( sx, sy ) ( tx, ty ) =
     let
+        _ =
+            Debug.log "Params" ( ( sx, sy ), ( tx, ty ) )
+
         -- midpoint in the x coordinate
         mx =
-            (sx + tx) / 2
+            Debug.log "mid" <| (sx + tx) / 2
 
         -- this is the vertex
         ( vx, vy ) =
-            ( mx, min sy ty - 200 )
+            Debug.log "vertex" <| ( mx, min sy ty - 200 )
 
         -- given the vertex, figure out the coefficient a
         fn =
             \x ->
-                let
-                    a =
-                        sy - vy / ((sx - vx) * (sx - vx))
-                in
-                a * (x - vx) * (x - vx) + vy
+                Debug.log "Y value" <| findCoefficient ( sx, sy ) ( vx, vy ) * (x - vx) * (x - vx) + vy
     in
     fn
 
@@ -91,10 +95,8 @@ moveCannonball delta ball =
 
         -- y_ =
         --     y + delta * velocity * vy
-        -- y_ =
-        --     ball.parabola x_
         y_ =
-            y
+            ball.parabola x_
 
         ( dx, dy ) =
             ( abs (x_ - tx), abs (y_ - ty) )
