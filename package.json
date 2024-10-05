@@ -1,11 +1,11 @@
 {
   "devDependencies": {
-    "@parcel/transformer-elm": "^2.8.2",
-    "@parcel/transformer-sass": "^2.8.2",
+    "@parcel/transformer-elm": "^2.12.0",
+    "@parcel/transformer-sass": "^2.12.0",
     "elm": "^0.19.1-5",
     "elm-format": "^0.8.5",
     "elm-test": "^0.19.1-revision11",
-    "parcel": "^2.8.2"
+    "parcel": "^2.12.0"
   },
   "name": "rampart",
   "description": "contemplating an hobby rewrite of the classic arcade game \"Rampart\"",
